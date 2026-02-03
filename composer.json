@@ -1,0 +1,16 @@
+{
+    "name": "app/controle-financeiro",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "App\\ControleFinanceiro\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Douglas Alves",
+            "email": "douglasreisalves02@gmail.com"
+        }
+    ],
+    "require": {}
+}
