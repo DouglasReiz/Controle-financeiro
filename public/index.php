@@ -4,8 +4,9 @@ include __DIR__ . "/../vendor/autoload.php";
 
 use App\ControleFinanceiro\Controller\IndexController;
 
-
-$url = explode('?', $_SERVER['REQUEST_URI'][0]);
+$requestUri = $_SERVER['REQUEST_URI'];
+$urlParts = explode('?', $requestUri);
+$url = $urlParts[0];
 
 function CreateRoute(string $controllerName, string $methodName): array
 {
@@ -17,9 +18,14 @@ function CreateRoute(string $controllerName, string $methodName): array
 
 $routes = [
     '/' => CreateRoute(IndexController::class, 'indexAction'),
+    '/login' => CreateRoute(IndexController::class, 'loginAction'),
 ];
 
 $controllerName = $routes[$url]['controller'];
 $methodName = $routes[$url]['method'];
 
-new $controllerName()-> $methodName();
+if (isset($routes[$url])) {
+    new $controllerName()->$methodName();
+} else {
+    echo "404 - Rota não encontrada";
+}
