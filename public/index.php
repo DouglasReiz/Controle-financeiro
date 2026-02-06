@@ -1,12 +1,27 @@
 <?php
 
-include __DIR__ . "/../vendor/autoload.php";
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../config/helpers.php';
 
-use App\ControleFinanceiro\Controller\IndexController;
+$routes = require __DIR__ . '/../config/routes.php';
 
-$requestUri = $_SERVER['REQUEST_URI'];
-$urlParts = explode('?', $requestUri);
-$url = $urlParts[0];
+if (!is_array($routes)) {
+    die("Erro: O arquivo de rotas não retornou um array válido.");
+}
+
+$url = explode('?', $_SERVER['REQUEST_URI'])[0];
+
+if (isset($routes[$url])) {
+    $route = $routes[$url];
+    $controllerName = $route['controller'];
+    $methodName = $route['action'];
+
+    $controller = new $controllerName();
+    $controller->$methodName();
+} else {
+    http_response_code(404);
+    echo "404 - Rota não encontrada";
+}
 
 $assetPrefix = '/assets/';
 if (strpos($url, $assetPrefix) === 0) {
@@ -28,26 +43,3 @@ if (strpos($url, $assetPrefix) === 0) {
     echo '404';
     exit;
 }
-
-function CreateRoute(string $controllerName, string $methodName): array
-{
-    return [
-        'controller' => $controllerName,
-        'method' => $methodName,
-    ];
-}
-
-$routes = [
-    '/' => CreateRoute(IndexController::class, 'indexAction'),
-    '/login' => CreateRoute(IndexController::class, 'loginAction'),
-    '/register' => CreateRoute(IndexController::class, 'registerAction'),
-];
-
-if (!isset($routes[$url])) {
-    echo "404 - Rota não encontrada";
-    exit;
-}
-
-$controllerName = $routes[$url]['controller'];
-$methodName = $routes[$url]['method'];
-new $controllerName()->$methodName();
