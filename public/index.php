@@ -1,31 +1,27 @@
 <?php
 
-include __DIR__ . "/../vendor/autoload.php";
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../config/helpers.php';
 
-use App\ControleFinanceiro\Controller\IndexController;
 
-$requestUri = $_SERVER['REQUEST_URI'];
-$urlParts = explode('?', $requestUri);
-$url = $urlParts[0];
+$routes = require __DIR__ . '/../config/routes.php';
 
-function CreateRoute(string $controllerName, string $methodName): array
-{
-    return [
-        'controller' => $controllerName,
-        'method' => $methodName,
-    ];
+// Verificação de segurança (para evitar o erro que você recebeu)
+if (!is_array($routes)) {
+    die("Erro: O arquivo de rotas não retornou um array válido.");
 }
 
-$routes = [
-    '/' => CreateRoute(IndexController::class, 'indexAction'),
-    '/login' => CreateRoute(IndexController::class, 'loginAction'),
-];
+$url = explode('?', $_SERVER['REQUEST_URI'])[0];
 
-$controllerName = $routes[$url]['controller'];
-$methodName = $routes[$url]['method'];
-
+// Use o isset que é mais seguro
 if (isset($routes[$url])) {
-    new $controllerName()->$methodName();
+    $route = $routes[$url];
+    $controllerName = $route['controller'];
+    $methodName = $route['action']; // Verifique se no helpers é 'action' ou 'method'
+
+    $controller = new $controllerName();
+    $controller->$methodName();
 } else {
+    http_response_code(404);
     echo "404 - Rota não encontrada";
 }
