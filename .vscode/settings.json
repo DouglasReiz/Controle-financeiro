@@ -1,3 +1,5 @@
+// DanielTomazDev - 05/02/2026 - Configuração do PHP para o VSCode
+
 {
   "php.validate.executablePath": "C:\\Program Files\\php\\php.exe"
 }

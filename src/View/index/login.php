@@ -72,7 +72,7 @@
     </div>
   </main>
 
-  <!-- Script de validação e controle do formulário - DanielTomazDev - 05/02/2026 -->
+  <!-- Script de validação e controle do formulário - DanielTomazDev -->
   <script src="/assets/js/login.js"></script>
 </body>
 </html>

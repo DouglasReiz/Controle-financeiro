@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================
-    // PREPARAÇÃO DOS DADOS PARA ENVIO - DanielTomazDev - 05/02/2026
+    // PREPARAÇÃO DOS DADOS PARA ENVIO - DanielTomazDev
     // ============================================
     
     const loginData = {
