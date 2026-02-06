@@ -19,13 +19,14 @@ function CreateRoute(string $controllerName, string $methodName): array
 $routes = [
     '/' => CreateRoute(IndexController::class, 'indexAction'),
     '/login' => CreateRoute(IndexController::class, 'loginAction'),
+    '/register' => CreateRoute(IndexController::class, 'registerAction'),
 ];
+
+if (!isset($routes[$url])) {
+    echo "404 - Rota não encontrada";
+    exit;
+}
 
 $controllerName = $routes[$url]['controller'];
 $methodName = $routes[$url]['method'];
-
-if (isset($routes[$url])) {
-    new $controllerName()->$methodName();
-} else {
-    echo "404 - Rota não encontrada";
-}
+new $controllerName()->$methodName();

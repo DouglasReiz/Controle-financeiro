@@ -15,4 +15,9 @@ class IndexController extends AbstractController
     {
         parent::render('index/login');
     }
+
+    public function registerAction(): void
+    {
+        parent::render('index/register');
+    }
 }
