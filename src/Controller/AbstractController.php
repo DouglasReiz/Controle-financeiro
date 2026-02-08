@@ -8,6 +8,6 @@ abstract class AbstractController
 {
     public function render(string $viewName): void
     {
-        include dirname(__DIR__) . "/../src/View/$viewName.php";
+        include __DIR__ . "/../View/$viewName.php";
     }
 }
