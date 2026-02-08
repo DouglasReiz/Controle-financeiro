@@ -75,6 +75,4 @@ Database
 - [ ] Expandir dashboard com gráficos (Diorge)
 - [ ] Testes automatizados
 
----
 
-**Desenvolvido com** ☕ **e** 😤 **por um time que sabe o que tá fazendo.**
