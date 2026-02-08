@@ -1,0 +1,85 @@
+/* Transactions Page Specific Styles */
+
+.transactions-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.transactions-list {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.transaction-date {
+  font-weight: 500;
+  color: #666;
+}
+
+.transaction-description {
+  color: #333;
+  font-weight: 500;
+}
+
+.transaction-category {
+  display: inline-block;
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+.transaction-account {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.transaction-type {
+  font-weight: 600;
+}
+
+.transaction-type.income {
+  color: #2e7d32;
+}
+
+.transaction-type.expense {
+  color: #c62828;
+}
+
+.transaction-value {
+  font-weight: 600;
+  text-align: right;
+}
+
+.transaction-value.income {
+  color: #2e7d32;
+}
+
+.transaction-value.expense {
+  color: #c62828;
+}
+
+.transaction-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .transaction-actions {
+    flex-direction: column;
+  }
+
+  .btn-action {
+    width: 100%;
+  }
+}

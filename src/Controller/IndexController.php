@@ -20,4 +20,19 @@ class IndexController extends AbstractController
     {
         parent::render('index/dashboard');
     }
+
+    public function transactionsAction(): void
+    {
+        parent::render('transactions/index');
+    }
+
+    public function accountsAction(): void
+    {
+        parent::render('accounts/index');
+    }
+
+    public function categoriesAction(): void
+    {
+        parent::render('categories/index');
+    }
 }

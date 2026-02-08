@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Facilite • Dashboard</title>
+  <link rel="stylesheet" href="/assets/css/app.css">
   <link rel="stylesheet" href="/assets/css/dashboard.css">
 </head>
 <body>
@@ -29,13 +30,9 @@
     </aside>
 
     <main class="main-content">
-      <header class="dashboard-header">
-        <div class="header-content">
-          <h2 class="page-title">Dashboard</h2>
-        </div>
-        <div class="header-actions">
-          <button class="logout-btn" id="logoutBtn">Sair</button>
-        </div>
+      <header class="page-header">
+        <h1>Dashboard</h1>
+        <button class="logout-btn" id="logoutBtn">Sair</button>
       </header>
 
       <section class="content-area">

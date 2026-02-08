@@ -1,0 +1,74 @@
+/* Empty States - UX Mínima */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+.empty-state-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.75rem 0;
+}
+
+.empty-state-message {
+  font-size: 1rem;
+  color: #666;
+  margin: 0 0 2rem 0;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .empty-state {
+    min-height: 300px;
+    padding: 2rem 1rem;
+  }
+
+  .empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .empty-state-title {
+    font-size: 1.25rem;
+  }
+
+  .empty-state-message {
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .empty-state {
+    min-height: 250px;
+    padding: 1.5rem 1rem;
+  }
+
+  .empty-state-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .empty-state-title {
+    font-size: 1.1rem;
+  }
+
+  .empty-state-message {
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+  }
+}

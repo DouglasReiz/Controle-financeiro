@@ -1,0 +1,145 @@
+/* Accounts Page Specific Styles */
+
+.accounts-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.accounts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.accounts-list {
+  display: contents;
+}
+
+.account-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-left: 4px solid #333;
+}
+
+.account-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.account-card.savings {
+  border-left-color: #2e7d32;
+}
+
+.account-card.checking {
+  border-left-color: #1976d2;
+}
+
+.account-card.credit {
+  border-left-color: #f57c00;
+}
+
+.account-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.account-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.account-type {
+  display: inline-block;
+  background: #f0f0f0;
+  color: #666;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.account-balance {
+  margin: 1rem 0;
+  padding: 1rem 0;
+  border-top: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.balance-label {
+  font-size: 0.85rem;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.balance-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.balance-value.positive {
+  color: #2e7d32;
+}
+
+.balance-value.negative {
+  color: #c62828;
+}
+
+.account-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #999;
+  margin-bottom: 1rem;
+}
+
+.account-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .accounts-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .account-card {
+    padding: 1rem;
+  }
+
+  .account-name {
+    font-size: 1rem;
+  }
+
+  .balance-value {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .accounts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .account-actions {
+    flex-direction: column;
+  }
+
+  .btn-action {
+    width: 100%;
+  }
+}

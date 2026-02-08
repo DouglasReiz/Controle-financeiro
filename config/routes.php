@@ -27,4 +27,22 @@ return [
         'name' => 'api.dashboard.summary',
         'middleware' => [RequireAuth::class]
     ],
+    '/lancamentos' => [
+        'controller' => IndexController::class,
+        'action' => 'transactionsAction',
+        'name' => 'transactions',
+        'middleware' => [RequireAuth::class]
+    ],
+    '/contas' => [
+        'controller' => IndexController::class,
+        'action' => 'accountsAction',
+        'name' => 'accounts',
+        'middleware' => [RequireAuth::class]
+    ],
+    '/categorias' => [
+        'controller' => IndexController::class,
+        'action' => 'categoriesAction',
+        'name' => 'categories',
+        'middleware' => [RequireAuth::class]
+    ],
 ];
