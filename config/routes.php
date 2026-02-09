@@ -23,6 +23,11 @@ return [
         'action' => 'index',
         'middleware' => [RequireAuth::class]
     ],
+    '/api/dashboard/summary' => [
+        'controller' => DashboardController::class,
+        'action' => 'index',
+        'middleware' => [RequireAuth::class]
+    ],
 
     // Accounts
     '/contas' => [
