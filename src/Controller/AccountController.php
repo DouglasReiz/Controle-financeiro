@@ -17,6 +17,14 @@ class AccountController extends AbstractController
         $this->accountService = new AccountService();
     }
 
+    /**
+     * GET /contas/criar → Exibe formulário
+     * POST /contas/criar → Cria nova conta
+     * 
+     * Respostas POST:
+     * - 201 Created: Conta criada
+     * - 400 Bad Request: Dados inválidos
+     */
     public function create(): void
     {
         $this->requireAuth();
@@ -39,6 +47,14 @@ class AccountController extends AbstractController
         $this->render('accounts/form', ['mode' => 'create']);
     }
 
+    /**
+     * GET /contas → Lista todas as contas
+     * GET /contas/{id} → Retorna uma conta específica
+     * 
+     * Respostas:
+     * - 200 OK: Dados retornados
+     * - 401 Unauthorized: Não autenticado
+     */
     public function read(?int $id = null): void
     {
         $this->requireAuth();
@@ -54,6 +70,14 @@ class AccountController extends AbstractController
         $this->respondResourceList('accounts/index', $accounts);
     }
 
+    /**
+     * GET /contas/{id}/editar → Exibe formulário
+     * PUT /contas/{id}/editar → Atualiza conta
+     * 
+     * Respostas PUT:
+     * - 200 OK: Conta atualizada
+     * - 400 Bad Request: Dados inválidos
+     */
     public function update(int $id): void
     {
         $this->requireAuth();
@@ -76,6 +100,13 @@ class AccountController extends AbstractController
         $this->respondSuccess(['data' => $account]);
     }
 
+    /**
+     * DELETE /contas/{id}/deletar → Deleta conta
+     * 
+     * Respostas:
+     * - 204 No Content: Deletado com sucesso
+     * - 405 Method Not Allowed: Método inválido
+     */
     public function delete(int $id): void
     {
         $this->requireAuth();
@@ -88,7 +119,8 @@ class AccountController extends AbstractController
         $userId = $this->getAuthUser()->getId();
         $this->accountService->deleteAccount($id, $userId);
 
-        $this->respondSuccess(['message' => 'Conta deletada']);
+        // 204 No Content é o padrão REST para DELETE bem-sucedido
+        http_response_code(204);
     }
 
     /**

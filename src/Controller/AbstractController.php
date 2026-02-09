@@ -26,8 +26,8 @@ abstract class AbstractController
     protected function json(array $data, int $statusCode = 200): void
     {
         http_response_code($statusCode);
-        header('Content-Type: application/json');
-        echo json_encode($data);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
     protected function requireAuth(): void
@@ -53,26 +53,38 @@ abstract class AbstractController
     }
 
     /**
-     * Responde com erro de validação (400)
-     * Padroniza formato de resposta para erros de validação
+     * Responde com erro de validação (400 Bad Request)
+     * Padrão REST: Requisição malformada ou dados inválidos
+     * 
+     * @param array $errors Mapa de campo => mensagem de erro
      */
     protected function respondValidationError(array $errors): void
     {
-        $this->json(['success' => false, 'errors' => $errors], 400);
+        $this->json([
+            'success' => false,
+            'errors' => $errors,
+        ], 400);
     }
 
     /**
-     * Responde com sucesso de criação (201)
-     * Padroniza formato de resposta para recursos criados
+     * Responde com sucesso de criação (201 Created)
+     * Padrão REST: Recurso criado com sucesso
+     * 
+     * @param array $data Dados do recurso criado
      */
     protected function respondCreated(array $data): void
     {
-        $this->json(['success' => true, 'data' => $data], 201);
+        $this->json([
+            'success' => true,
+            'data' => $data,
+        ], 201);
     }
 
     /**
-     * Responde com sucesso de operação (200)
-     * Padroniza formato de resposta para operações bem-sucedidas
+     * Responde com sucesso de operação (200 OK)
+     * Padrão REST: Operação bem-sucedida
+     * 
+     * @param array $data Dados da resposta (opcional)
      */
     protected function respondSuccess(array $data = []): void
     {
@@ -80,24 +92,82 @@ abstract class AbstractController
         if (!empty($data)) {
             $response['data'] = $data;
         }
-        $this->json($response);
+        $this->json($response, 200);
     }
 
     /**
-     * Responde com erro de método não permitido (405)
-     * Padroniza formato de resposta para métodos HTTP inválidos
+     * Responde com erro de método não permitido (405 Method Not Allowed)
+     * Padrão REST: Método HTTP não suportado para este recurso
      */
     protected function respondMethodNotAllowed(): void
     {
-        $this->json(['success' => false, 'message' => 'Método não permitido'], 405);
+        $this->json([
+            'success' => false,
+            'message' => 'Método não permitido',
+        ], 405);
     }
 
     /**
-     * Responde com erro de não autenticado (401)
-     * Padroniza formato de resposta para requisições não autenticadas
+     * Responde com erro de não autenticado (401 Unauthorized)
+     * Padrão REST: Requisição requer autenticação
      */
     protected function respondUnauthorized(): void
     {
-        $this->json(['success' => false, 'message' => 'Não autenticado'], 401);
+        $this->json([
+            'success' => false,
+            'message' => 'Não autenticado',
+        ], 401);
+    }
+
+    /**
+     * Responde com erro de não autorizado (403 Forbidden)
+     * Padrão REST: Usuário autenticado mas sem permissão
+     */
+    protected function respondForbidden(): void
+    {
+        $this->json([
+            'success' => false,
+            'message' => 'Acesso negado',
+        ], 403);
+    }
+
+    /**
+     * Responde com erro de recurso não encontrado (404 Not Found)
+     * Padrão REST: Recurso não existe
+     */
+    protected function respondNotFound(): void
+    {
+        $this->json([
+            'success' => false,
+            'message' => 'Recurso não encontrado',
+        ], 404);
+    }
+
+    /**
+     * Responde com erro genérico do servidor (500 Internal Server Error)
+     * Padrão REST: Erro inesperado no servidor
+     * 
+     * @param string $message Mensagem de erro (opcional)
+     */
+    protected function respondServerError(string $message = 'Erro interno do servidor'): void
+    {
+        $this->json([
+            'success' => false,
+            'message' => $message,
+        ], 500);
+    }
+
+    /**
+     * Responde com erro de autenticação falha (401 Unauthorized)
+     * Padrão REST: Credenciais inválidas
+     * 
+     * @param string $message Mensagem de erro
+     */
+    protected function respondAuthenticationFailed(string $message = 'Credenciais inválidas'): void
+    {
+        $this->json([
+            'success' => false,
+            'message' => $message,
+        ], 401);
     }
 }

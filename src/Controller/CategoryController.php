@@ -7,6 +7,18 @@ namespace App\ControleFinanceiro\Controller;
 use App\ControleFinanceiro\Service\CategoryService;
 use App\ControleFinanceiro\Http\RequestHandler;
 
+/**
+ * CategoryController - CRUD de Categorias
+ * 
+ * Padrão REST:
+ * - GET /categorias → read() → 200 HTML (lista) ou 200 JSON
+ * - GET /categorias/criar → create() → 200 HTML (formulário)
+ * - POST /categorias/criar → create() → 201 JSON (criado) ou 400 JSON (erro)
+ * - GET /categorias/{id} → read($id) → 200 HTML (detalhe) ou 200 JSON
+ * - GET /categorias/{id}/editar → update($id) → 200 HTML (formulário)
+ * - PUT /categorias/{id}/editar → update($id) → 200 JSON ou 400 JSON (erro)
+ * - DELETE /categorias/{id}/deletar → delete($id) → 204 No Content ou 400 JSON
+ */
 class CategoryController extends AbstractController
 {
     private CategoryService $categoryService;
@@ -17,6 +29,14 @@ class CategoryController extends AbstractController
         $this->categoryService = new CategoryService();
     }
 
+    /**
+     * GET /categorias/criar → Exibe formulário
+     * POST /categorias/criar → Cria nova categoria
+     * 
+     * Respostas POST:
+     * - 201 Created: Categoria criada
+     * - 400 Bad Request: Dados inválidos
+     */
     public function create(): void
     {
         $this->requireAuth();
@@ -39,6 +59,14 @@ class CategoryController extends AbstractController
         $this->render('categories/form', ['mode' => 'create']);
     }
 
+    /**
+     * GET /categorias → Lista todas as categorias
+     * GET /categorias/{id} → Retorna uma categoria específica
+     * 
+     * Respostas:
+     * - 200 OK: Dados retornados
+     * - 401 Unauthorized: Não autenticado
+     */
     public function read(?int $id = null): void
     {
         $this->requireAuth();
@@ -54,6 +82,14 @@ class CategoryController extends AbstractController
         $this->respondResourceList('categories/index', $categories);
     }
 
+    /**
+     * GET /categorias/{id}/editar → Exibe formulário
+     * PUT /categorias/{id}/editar → Atualiza categoria
+     * 
+     * Respostas PUT:
+     * - 200 OK: Categoria atualizada
+     * - 400 Bad Request: Dados inválidos
+     */
     public function update(int $id): void
     {
         $this->requireAuth();
@@ -76,6 +112,13 @@ class CategoryController extends AbstractController
         $this->respondSuccess(['data' => $category]);
     }
 
+    /**
+     * DELETE /categorias/{id}/deletar → Deleta categoria
+     * 
+     * Respostas:
+     * - 204 No Content: Deletado com sucesso
+     * - 405 Method Not Allowed: Método inválido
+     */
     public function delete(int $id): void
     {
         $this->requireAuth();
@@ -88,7 +131,8 @@ class CategoryController extends AbstractController
         $userId = $this->getAuthUser()->getId();
         $this->categoryService->deleteCategory($id, $userId);
 
-        $this->respondSuccess(['message' => 'Categoria deletada']);
+        // 204 No Content é o padrão REST para DELETE bem-sucedido
+        http_response_code(204);
     }
 
     /**
