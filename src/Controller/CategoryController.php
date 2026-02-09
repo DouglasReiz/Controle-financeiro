@@ -4,20 +4,56 @@ declare(strict_types=1);
 
 namespace App\ControleFinanceiro\Controller;
 
-use App\ControleFinanceiro\Http\RequestHandler;
-
 class CategoryController extends AbstractController
 {
-    private RequestHandler $request;
-
-    public function __construct()
-    {
-        $this->request = new RequestHandler();
-    }
-
-    public function index(): void
+    public function create(): void
     {
         $this->requireAuth();
+
+        if ($this->request->isPost()) {
+            $data = $this->request->json();
+
+            $errors = $this->validateRequired($data, [
+                'name' => 'Nome',
+                'type' => 'Tipo'
+            ]);
+
+            if (!empty($errors)) {
+                http_response_code(400);
+                $this->json(['success' => false, 'errors' => $errors]);
+                return;
+            }
+
+            $category = [
+                'id' => 4,
+                'name' => $data['name'],
+                'type' => $data['type'],
+                'icon' => $data['icon'] ?? '📌',
+            ];
+
+            http_response_code(201);
+            $this->json(['success' => true, 'data' => $category]);
+            return;
+        }
+
+        $this->render('categories/form', ['mode' => 'create']);
+    }
+
+    public function read(?int $id = null): void
+    {
+        $this->requireAuth();
+
+        if ($id) {
+            $category = ['id' => $id, 'name' => 'Alimentação', 'type' => 'expense', 'icon' => '🍔'];
+
+            if ($this->wantsJson()) {
+                $this->json(['success' => true, 'data' => $category]);
+                return;
+            }
+
+            $this->render('categories/show', ['category' => $category]);
+            return;
+        }
 
         $categories = [
             ['id' => 1, 'name' => 'Alimentação', 'type' => 'expense', 'icon' => '🍔'],
@@ -25,7 +61,7 @@ class CategoryController extends AbstractController
             ['id' => 3, 'name' => 'Salário', 'type' => 'income', 'icon' => '💰'],
         ];
 
-        if ($this->request->wantsJson()) {
+        if ($this->wantsJson()) {
             $this->json(['success' => true, 'data' => $categories]);
             return;
         }
@@ -33,96 +69,32 @@ class CategoryController extends AbstractController
         $this->render('categories/index', ['categories' => $categories]);
     }
 
-    public function create(): void
-    {
-        $this->requireAuth();
-        $this->render('categories/form', ['mode' => 'create']);
-    }
-
-    public function store(): void
-    {
-        $this->requireAuth();
-
-        if (!$this->request->isPost()) {
-            http_response_code(405);
-            $this->json(['success' => false, 'message' => 'Método não permitido']);
-            return;
-        }
-
-        $data = $this->request->json();
-
-        $errors = [];
-        if (empty($data['name'])) {
-            $errors['name'] = 'Nome é obrigatório';
-        }
-        if (empty($data['type'])) {
-            $errors['type'] = 'Tipo é obrigatório';
-        }
-
-        if (!empty($errors)) {
-            http_response_code(400);
-            $this->json(['success' => false, 'errors' => $errors]);
-            return;
-        }
-
-        $category = [
-            'id' => 4,
-            'name' => $data['name'],
-            'type' => $data['type'],
-            'icon' => $data['icon'] ?? '📌',
-        ];
-
-        http_response_code(201);
-        $this->json(['success' => true, 'data' => $category]);
-    }
-
-    public function show(int $id): void
-    {
-        $this->requireAuth();
-
-        $category = ['id' => $id, 'name' => 'Alimentação', 'type' => 'expense', 'icon' => '🍔'];
-
-        if ($this->request->wantsJson()) {
-            $this->json(['success' => true, 'data' => $category]);
-            return;
-        }
-
-        $this->render('categories/show', ['category' => $category]);
-    }
-
-    public function edit(int $id): void
-    {
-        $this->requireAuth();
-        $this->render('categories/form', ['mode' => 'edit', 'id' => $id]);
-    }
-
     public function update(int $id): void
     {
         $this->requireAuth();
 
-        if (!$this->request->isPut()) {
-            http_response_code(405);
-            $this->json(['success' => false, 'message' => 'Método não permitido']);
+        if ($this->request->isPut() || $this->request->isPost()) {
+            $data = $this->request->json();
+
+            $category = [
+                'id' => $id,
+                'name' => $data['name'] ?? 'Alimentação',
+                'type' => $data['type'] ?? 'expense',
+                'icon' => $data['icon'] ?? '🍔',
+            ];
+
+            $this->json(['success' => true, 'data' => $category]);
             return;
         }
 
-        $data = $this->request->json();
-
-        $category = [
-            'id' => $id,
-            'name' => $data['name'] ?? 'Alimentação',
-            'type' => $data['type'] ?? 'expense',
-            'icon' => $data['icon'] ?? '🍔',
-        ];
-
-        $this->json(['success' => true, 'data' => $category]);
+        $this->render('categories/form', ['mode' => 'edit', 'id' => $id]);
     }
 
     public function delete(int $id): void
     {
         $this->requireAuth();
 
-        if (!$this->request->isDelete()) {
+        if (!$this->request->isDelete() && !$this->request->isPost()) {
             http_response_code(405);
             $this->json(['success' => false, 'message' => 'Método não permitido']);
             return;

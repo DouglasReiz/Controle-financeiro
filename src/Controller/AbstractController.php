@@ -10,6 +10,13 @@ use App\ControleFinanceiro\Http\RequestHandler;
 
 abstract class AbstractController
 {
+    protected RequestHandler $request;
+
+    public function __construct()
+    {
+        $this->request = new RequestHandler();
+    }
+
     protected function render(string $viewName, array $data = []): void
     {
         extract($data);
@@ -42,8 +49,18 @@ abstract class AbstractController
 
     protected function wantsJson(): bool
     {
-        $request = new RequestHandler();
         $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
         return strpos($accept, 'application/json') !== false;
+    }
+
+    protected function validateRequired(array $data, array $fields): array
+    {
+        $errors = [];
+        foreach ($fields as $field => $label) {
+            if (empty($data[$field])) {
+                $errors[$field] = "$label é obrigatório";
+            }
+        }
+        return $errors;
     }
 }
