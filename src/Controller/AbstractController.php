@@ -8,6 +8,30 @@ use App\ControleFinanceiro\Service\AuthSession;
 use App\ControleFinanceiro\Service\AuthUser;
 use App\ControleFinanceiro\Http\RequestHandler;
 
+/**
+ * AbstractController - Base para todos os controllers
+ * 
+ * Responsabilidades:
+ * - Renderizar views (HTML)
+ * - Responder com JSON (REST)
+ * - Gerenciar autenticação (requireAuth, getAuthUser)
+ * - Fornecer helpers de resposta HTTP padronizados
+ * - Abstrair padrões repetidos em controllers CRUD
+ * 
+ * Padrão de resposta JSON:
+ * {
+ *   "success": bool,
+ *   "data": mixed (opcional),
+ *   "errors": array (opcional),
+ *   "message": string (opcional)
+ * }
+ * 
+ * Controllers devem:
+ * 1. Receber request
+ * 2. Delegar lógica ao Service
+ * 3. Responder com HTML ou JSON
+ * 4. NUNCA conter regra de negócio
+ */
 abstract class AbstractController
 {
     protected RequestHandler $request;

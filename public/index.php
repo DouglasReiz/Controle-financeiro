@@ -21,9 +21,37 @@ try {
         $url = rtrim($url, '/');
     }
 
-    if (isset($routes[$url])) {
-        $route = $routes[$url];
-        
+    $httpMethod = $_SERVER['REQUEST_METHOD'];
+    $route = null;
+
+    // Tentar match exato (path + method)
+    foreach ($routes as $pattern => $routeConfig) {
+        if ($pattern === $url && isset($routeConfig['method']) && $routeConfig['method'] === $httpMethod) {
+            $route = $routeConfig;
+            break;
+        }
+    }
+
+    // Se não encontrou, tentar match com parâmetro {id}
+    if (!$route) {
+        foreach ($routes as $pattern => $routeConfig) {
+            if (isset($routeConfig['method']) && $routeConfig['method'] === $httpMethod) {
+                $regex = preg_replace('/\{id\}/', '(\d+)', $pattern);
+                $regex = '#^' . $regex . '$#';
+                
+                if (preg_match($regex, $url, $matches)) {
+                    $route = $routeConfig;
+                    // Passar o ID como parâmetro
+                    if (count($matches) > 1) {
+                        $route['id'] = (int)$matches[1];
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    if ($route) {
         // Executar middleware se existir
         if (isset($route['middleware']) && is_array($route['middleware'])) {
             foreach ($route['middleware'] as $middlewareClass) {
@@ -37,7 +65,13 @@ try {
         // Injeção de dependência: RequestHandler
         $request = new RequestHandler();
         $controller = new $controllerName($request);
-        $controller->$methodName();
+        
+        // Chamar método com ID se existir
+        if (isset($route['id'])) {
+            $controller->$methodName($route['id']);
+        } else {
+            $controller->$methodName();
+        }
     } else {
         http_response_code(404);
         echo "404 - Rota não encontrada: " . htmlspecialchars($url);

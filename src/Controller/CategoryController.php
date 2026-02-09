@@ -8,16 +8,25 @@ use App\ControleFinanceiro\Service\CategoryService;
 use App\ControleFinanceiro\Http\RequestHandler;
 
 /**
- * CategoryController - CRUD de Categorias
+ * CategoryController - CRUD de Categorias (Recurso)
  * 
- * Padrão REST:
- * - GET /categorias → read() → 200 HTML (lista) ou 200 JSON
- * - GET /categorias/criar → create() → 200 HTML (formulário)
- * - POST /categorias/criar → create() → 201 JSON (criado) ou 400 JSON (erro)
- * - GET /categorias/{id} → read($id) → 200 HTML (detalhe) ou 200 JSON
- * - GET /categorias/{id}/editar → update($id) → 200 HTML (formulário)
- * - PUT /categorias/{id}/editar → update($id) → 200 JSON ou 400 JSON (erro)
- * - DELETE /categorias/{id}/deletar → delete($id) → 204 No Content ou 400 JSON
+ * Padrão REST explícito por HTTP method:
+ * - GET /categorias → read() → Lista todas as categorias
+ * - GET /categorias/criar → showCreateForm() → Formulário de criação
+ * - POST /categorias → create() → Cria nova categoria
+ * - GET /categorias/{id} → read($id) → Detalhe de uma categoria
+ * - GET /categorias/{id}/editar → showEditForm($id) → Formulário de edição
+ * - PUT /categorias/{id} → update($id) → Atualiza categoria
+ * - DELETE /categorias/{id} → delete($id) → Deleta categoria
+ * 
+ * Responsabilidades:
+ * - Receber request e extrair dados
+ * - Delegar validação e lógica ao CategoryService
+ * - Responder com HTML (views) ou JSON (API)
+ * - Gerenciar autenticação via middleware
+ * 
+ * Padrão: Cada método HTTP tem seu próprio método no controller
+ * Sem if statements para verificar método HTTP (roteamento via routes.php)
  */
 class CategoryController extends AbstractController
 {
@@ -30,41 +39,63 @@ class CategoryController extends AbstractController
     }
 
     /**
-     * GET /categorias/criar → Exibe formulário
-     * POST /categorias/criar → Cria nova categoria
+     * GET /categorias/criar
+     * Exibe formulário de criação de categoria
      * 
-     * Respostas POST:
-     * - 201 Created: Categoria criada
+     * Fluxo:
+     * 1. Verificar autenticação (middleware)
+     * 2. Renderizar view com formulário vazio
+     */
+    public function showCreateForm(): void
+    {
+        $this->requireAuth();
+        $this->render('categories/form', ['mode' => 'create']);
+    }
+
+    /**
+     * POST /categorias
+     * Cria nova categoria
+     * 
+     * Fluxo:
+     * 1. Verificar autenticação (middleware)
+     * 2. Extrair dados do request
+     * 3. Delegar validação ao CategoryService
+     * 4. Delegar criação ao CategoryService
+     * 5. Responder com 201 Created (JSON)
+     * 
+     * Respostas:
+     * - 201 Created: Categoria criada com sucesso
      * - 400 Bad Request: Dados inválidos
      */
     public function create(): void
     {
         $this->requireAuth();
 
-        if ($this->request->isPost()) {
-            $data = $this->request->json();
-            $userId = $this->getAuthUser()->getId();
+        $data = $this->request->json();
+        $userId = $this->getAuthUser()->getId();
 
-            $errors = $this->categoryService->validateCategoryData($data);
-            if (!empty($errors)) {
-                $this->respondValidationError($errors);
-                return;
-            }
-
-            $category = $this->categoryService->createCategory($data, $userId);
-            $this->respondCreated($category);
+        $errors = $this->categoryService->validateCategoryData($data);
+        if (!empty($errors)) {
+            $this->respondValidationError($errors);
             return;
         }
 
-        $this->render('categories/form', ['mode' => 'create']);
+        $category = $this->categoryService->createCategory($data, $userId);
+        $this->respondCreated($category);
     }
 
     /**
-     * GET /categorias → Lista todas as categorias
-     * GET /categorias/{id} → Retorna uma categoria específica
+     * GET /categorias ou GET /categorias/{id}
+     * Lista todas as categorias ou retorna uma específica
+     * 
+     * Fluxo:
+     * 1. Verificar autenticação (middleware)
+     * 2. Se {id} fornecido: buscar categoria específica
+     * 3. Se sem {id}: buscar todas as categorias
+     * 4. Responder com HTML (view) ou JSON (API)
      * 
      * Respostas:
-     * - 200 OK: Dados retornados
+     * - 200 OK: Dados retornados (HTML ou JSON)
      * - 401 Unauthorized: Não autenticado
      */
     public function read(?int $id = null): void
@@ -83,33 +114,44 @@ class CategoryController extends AbstractController
     }
 
     /**
-     * GET /categorias/{id}/editar → Exibe formulário
-     * PUT /categorias/{id}/editar → Atualiza categoria
+     * GET /categorias/{id}/editar
+     * Exibe formulário de edição de categoria
      * 
-     * Respostas:
-     * - 200 OK: Formulário (GET) ou Categoria atualizada (PUT)
-     * - 400 Bad Request: Dados inválidos (PUT)
-     * - 405 Method Not Allowed: Método inválido
+     * Fluxo:
+     * 1. Verificar autenticação (middleware)
+     * 2. Buscar categoria pelo ID
+     * 3. Renderizar view com dados da categoria
      */
-    public function update(int $id): void
+    public function showEditForm(int $id): void
     {
         $this->requireAuth();
         $userId = $this->getAuthUser()->getId();
 
-        // GET: Exibir formulário de edição
-        if ($this->isGetRequest()) {
-            $category = $this->categoryService->getCategoryById($id, $userId);
-            $this->render('categories/form', ['mode' => 'edit', 'category' => $category]);
-            return;
-        }
+        $category = $this->categoryService->getCategoryById($id, $userId);
+        $this->render('categories/form', ['mode' => 'edit', 'category' => $category]);
+    }
 
-        // PUT/POST: Atualizar dados
-        if (!$this->isUpdateRequest()) {
-            $this->respondMethodNotAllowed();
-            return;
-        }
+    /**
+     * PUT /categorias/{id}
+     * Atualiza categoria
+     * 
+     * Fluxo:
+     * 1. Verificar autenticação (middleware)
+     * 2. Extrair dados do request
+     * 3. Delegar validação ao CategoryService
+     * 4. Delegar atualização ao CategoryService
+     * 5. Responder com 200 OK (JSON)
+     * 
+     * Respostas:
+     * - 200 OK: Categoria atualizada com sucesso
+     * - 400 Bad Request: Dados inválidos
+     */
+    public function update(int $id): void
+    {
+        $this->requireAuth();
 
         $data = $this->request->json();
+        $userId = $this->getAuthUser()->getId();
 
         $errors = $this->categoryService->validateCategoryData($data);
         if (!empty($errors)) {
@@ -122,20 +164,20 @@ class CategoryController extends AbstractController
     }
 
     /**
-     * DELETE /categorias/{id}/deletar → Deleta categoria
+     * DELETE /categorias/{id}
+     * Deleta categoria
+     * 
+     * Fluxo:
+     * 1. Verificar autenticação (middleware)
+     * 2. Delegar deleção ao CategoryService
+     * 3. Responder com 204 No Content
      * 
      * Respostas:
      * - 204 No Content: Deletado com sucesso
-     * - 405 Method Not Allowed: Método inválido
      */
     public function delete(int $id): void
     {
         $this->requireAuth();
-
-        if (!$this->isDeleteRequest()) {
-            $this->respondMethodNotAllowed();
-            return;
-        }
 
         $userId = $this->getAuthUser()->getId();
         $this->categoryService->deleteCategory($id, $userId);
