@@ -36,6 +36,34 @@ final class RequestHandler
         return $_SERVER['REQUEST_METHOD'] ?? 'GET';
     }
 
+    public function uri(): string
+    {
+        return $_SERVER['REQUEST_URI'] ?? '/';
+    }
+
+    public function wantsJson(): bool
+    {
+        // 1. Verifica header Accept
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+        if (strpos($accept, 'application/json') !== false) {
+            return true;
+        }
+
+        // 2. Verifica prefixo /api na rota
+        $uri = $this->uri();
+        if (str_starts_with($uri, '/api/')) {
+            return true;
+        }
+
+        // 3. Fallback: se Content-Type é JSON, assume resposta JSON
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+        if (strpos($contentType, 'application/json') !== false) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function isPost(): bool
     {
         return $this->method() === 'POST';

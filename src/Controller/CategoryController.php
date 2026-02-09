@@ -4,35 +4,35 @@ declare(strict_types=1);
 
 namespace App\ControleFinanceiro\Controller;
 
+use App\ControleFinanceiro\Service\CategoryService;
+use App\ControleFinanceiro\Http\RequestHandler;
+
 class CategoryController extends AbstractController
 {
+    private CategoryService $categoryService;
+
+    public function __construct(RequestHandler $request)
+    {
+        parent::__construct($request);
+        $this->categoryService = new CategoryService();
+    }
+
     public function create(): void
     {
         $this->requireAuth();
 
         if ($this->request->isPost()) {
             $data = $this->request->json();
+            $userId = $this->getAuthUser()->getId();
 
-            $errors = $this->validateRequired($data, [
-                'name' => 'Nome',
-                'type' => 'Tipo'
-            ]);
-
+            $errors = $this->categoryService->validateCategoryData($data);
             if (!empty($errors)) {
-                http_response_code(400);
-                $this->json(['success' => false, 'errors' => $errors]);
+                $this->respondValidationError($errors);
                 return;
             }
 
-            $category = [
-                'id' => 4,
-                'name' => $data['name'],
-                'type' => $data['type'],
-                'icon' => $data['icon'] ?? '📌',
-            ];
-
-            http_response_code(201);
-            $this->json(['success' => true, 'data' => $category]);
+            $category = $this->categoryService->createCategory($data, $userId);
+            $this->respondCreated($category);
             return;
         }
 
@@ -42,64 +42,94 @@ class CategoryController extends AbstractController
     public function read(?int $id = null): void
     {
         $this->requireAuth();
+        $userId = $this->getAuthUser()->getId();
 
         if ($id) {
-            $category = ['id' => $id, 'name' => 'Alimentação', 'type' => 'expense', 'icon' => '🍔'];
-
-            if ($this->wantsJson()) {
-                $this->json(['success' => true, 'data' => $category]);
-                return;
-            }
-
-            $this->render('categories/show', ['category' => $category]);
+            $category = $this->categoryService->getCategoryById($id, $userId);
+            $this->respondResource($category);
             return;
         }
 
-        $categories = [
-            ['id' => 1, 'name' => 'Alimentação', 'type' => 'expense', 'icon' => '🍔'],
-            ['id' => 2, 'name' => 'Transporte', 'type' => 'expense', 'icon' => '🚗'],
-            ['id' => 3, 'name' => 'Salário', 'type' => 'income', 'icon' => '💰'],
-        ];
-
-        if ($this->wantsJson()) {
-            $this->json(['success' => true, 'data' => $categories]);
-            return;
-        }
-
-        $this->render('categories/index', ['categories' => $categories]);
+        $categories = $this->categoryService->getAllCategories($userId);
+        $this->respondResourceList('categories/index', $categories);
     }
 
     public function update(int $id): void
     {
         $this->requireAuth();
 
-        if ($this->request->isPut() || $this->request->isPost()) {
-            $data = $this->request->json();
-
-            $category = [
-                'id' => $id,
-                'name' => $data['name'] ?? 'Alimentação',
-                'type' => $data['type'] ?? 'expense',
-                'icon' => $data['icon'] ?? '🍔',
-            ];
-
-            $this->json(['success' => true, 'data' => $category]);
+        if (!$this->isUpdateRequest()) {
+            $this->respondMethodNotAllowed();
             return;
         }
 
-        $this->render('categories/form', ['mode' => 'edit', 'id' => $id]);
+        $data = $this->request->json();
+        $userId = $this->getAuthUser()->getId();
+
+        $errors = $this->categoryService->validateCategoryData($data);
+        if (!empty($errors)) {
+            $this->respondValidationError($errors);
+            return;
+        }
+
+        $category = $this->categoryService->updateCategory($id, $data, $userId);
+        $this->respondSuccess(['data' => $category]);
     }
 
     public function delete(int $id): void
     {
         $this->requireAuth();
 
-        if (!$this->request->isDelete() && !$this->request->isPost()) {
-            http_response_code(405);
-            $this->json(['success' => false, 'message' => 'Método não permitido']);
+        if (!$this->isDeleteRequest()) {
+            $this->respondMethodNotAllowed();
             return;
         }
 
-        $this->json(['success' => true, 'message' => 'Categoria deletada']);
+        $userId = $this->getAuthUser()->getId();
+        $this->categoryService->deleteCategory($id, $userId);
+
+        $this->respondSuccess(['message' => 'Categoria deletada']);
+    }
+
+    /**
+     * Verifica se é requisição de atualização (PUT ou POST)
+     */
+    private function isUpdateRequest(): bool
+    {
+        return $this->request->isPut() || $this->request->isPost();
+    }
+
+    /**
+     * Verifica se é requisição de deleção (DELETE ou POST)
+     */
+    private function isDeleteRequest(): bool
+    {
+        return $this->request->isDelete() || $this->request->isPost();
+    }
+
+    /**
+     * Responde com um recurso individual (HTML ou JSON)
+     */
+    private function respondResource(array $resource): void
+    {
+        if ($this->wantsJson()) {
+            $this->respondSuccess(['data' => $resource]);
+            return;
+        }
+
+        $this->render('categories/show', ['category' => $resource]);
+    }
+
+    /**
+     * Responde com lista de recursos (HTML ou JSON)
+     */
+    private function respondResourceList(string $viewName, array $resources): void
+    {
+        if ($this->wantsJson()) {
+            $this->respondSuccess(['data' => $resources]);
+            return;
+        }
+
+        $this->render($viewName, ['categories' => $resources]);
     }
 }

@@ -6,6 +6,8 @@ ini_set('display_errors', 1);
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../config/helpers.php';
 
+use App\ControleFinanceiro\Http\RequestHandler;
+
 try {
     $routes = require __DIR__ . '/../config/routes.php';
 
@@ -32,7 +34,9 @@ try {
         $controllerName = $route['controller'];
         $methodName = $route['action'];
 
-        $controller = new $controllerName();
+        // Injeção de dependência: RequestHandler
+        $request = new RequestHandler();
+        $controller = new $controllerName($request);
         $controller->$methodName();
     } else {
         http_response_code(404);

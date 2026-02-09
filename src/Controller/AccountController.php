@@ -4,35 +4,35 @@ declare(strict_types=1);
 
 namespace App\ControleFinanceiro\Controller;
 
+use App\ControleFinanceiro\Service\AccountService;
+use App\ControleFinanceiro\Http\RequestHandler;
+
 class AccountController extends AbstractController
 {
+    private AccountService $accountService;
+
+    public function __construct(RequestHandler $request)
+    {
+        parent::__construct($request);
+        $this->accountService = new AccountService();
+    }
+
     public function create(): void
     {
         $this->requireAuth();
 
         if ($this->request->isPost()) {
             $data = $this->request->json();
+            $userId = $this->getAuthUser()->getId();
 
-            $errors = $this->validateRequired($data, [
-                'name' => 'Nome',
-                'type' => 'Tipo'
-            ]);
-
+            $errors = $this->accountService->validateAccountData($data);
             if (!empty($errors)) {
-                http_response_code(400);
-                $this->json(['success' => false, 'errors' => $errors]);
+                $this->respondValidationError($errors);
                 return;
             }
 
-            $account = [
-                'id' => 3,
-                'name' => $data['name'],
-                'type' => $data['type'],
-                'balance' => $data['balance'] ?? 0,
-            ];
-
-            http_response_code(201);
-            $this->json(['success' => true, 'data' => $account]);
+            $account = $this->accountService->createAccount($data, $userId);
+            $this->respondCreated($account);
             return;
         }
 
@@ -42,63 +42,94 @@ class AccountController extends AbstractController
     public function read(?int $id = null): void
     {
         $this->requireAuth();
+        $userId = $this->getAuthUser()->getId();
 
         if ($id) {
-            $account = ['id' => $id, 'name' => 'Conta Corrente', 'type' => 'checking', 'balance' => 3500.00];
-
-            if ($this->wantsJson()) {
-                $this->json(['success' => true, 'data' => $account]);
-                return;
-            }
-
-            $this->render('accounts/show', ['account' => $account]);
+            $account = $this->accountService->getAccountById($id, $userId);
+            $this->respondResource($account);
             return;
         }
 
-        $accounts = [
-            ['id' => 1, 'name' => 'Conta Corrente', 'type' => 'checking', 'balance' => 3500.00],
-            ['id' => 2, 'name' => 'Poupança', 'type' => 'savings', 'balance' => 8750.50],
-        ];
-
-        if ($this->wantsJson()) {
-            $this->json(['success' => true, 'data' => $accounts]);
-            return;
-        }
-
-        $this->render('accounts/index', ['accounts' => $accounts]);
+        $accounts = $this->accountService->getAllAccounts($userId);
+        $this->respondResourceList('accounts/index', $accounts);
     }
 
     public function update(int $id): void
     {
         $this->requireAuth();
 
-        if ($this->request->isPut() || $this->request->isPost()) {
-            $data = $this->request->json();
-
-            $account = [
-                'id' => $id,
-                'name' => $data['name'] ?? 'Conta Corrente',
-                'type' => $data['type'] ?? 'checking',
-                'balance' => $data['balance'] ?? 3500.00,
-            ];
-
-            $this->json(['success' => true, 'data' => $account]);
+        if (!$this->isUpdateRequest()) {
+            $this->respondMethodNotAllowed();
             return;
         }
 
-        $this->render('accounts/form', ['mode' => 'edit', 'id' => $id]);
+        $data = $this->request->json();
+        $userId = $this->getAuthUser()->getId();
+
+        $errors = $this->accountService->validateAccountData($data);
+        if (!empty($errors)) {
+            $this->respondValidationError($errors);
+            return;
+        }
+
+        $account = $this->accountService->updateAccount($id, $data, $userId);
+        $this->respondSuccess(['data' => $account]);
     }
 
     public function delete(int $id): void
     {
         $this->requireAuth();
 
-        if (!$this->request->isDelete() && !$this->request->isPost()) {
-            http_response_code(405);
-            $this->json(['success' => false, 'message' => 'Método não permitido']);
+        if (!$this->isDeleteRequest()) {
+            $this->respondMethodNotAllowed();
             return;
         }
 
-        $this->json(['success' => true, 'message' => 'Conta deletada']);
+        $userId = $this->getAuthUser()->getId();
+        $this->accountService->deleteAccount($id, $userId);
+
+        $this->respondSuccess(['message' => 'Conta deletada']);
+    }
+
+    /**
+     * Verifica se é requisição de atualização (PUT ou POST)
+     */
+    private function isUpdateRequest(): bool
+    {
+        return $this->request->isPut() || $this->request->isPost();
+    }
+
+    /**
+     * Verifica se é requisição de deleção (DELETE ou POST)
+     */
+    private function isDeleteRequest(): bool
+    {
+        return $this->request->isDelete() || $this->request->isPost();
+    }
+
+    /**
+     * Responde com um recurso individual (HTML ou JSON)
+     */
+    private function respondResource(array $resource): void
+    {
+        if ($this->wantsJson()) {
+            $this->respondSuccess(['data' => $resource]);
+            return;
+        }
+
+        $this->render('accounts/show', ['account' => $resource]);
+    }
+
+    /**
+     * Responde com lista de recursos (HTML ou JSON)
+     */
+    private function respondResourceList(string $viewName, array $resources): void
+    {
+        if ($this->wantsJson()) {
+            $this->respondSuccess(['data' => $resources]);
+            return;
+        }
+
+        $this->render($viewName, ['accounts' => $resources]);
     }
 }

@@ -9,15 +9,13 @@ use App\ControleFinanceiro\Controller\CategoryController;
 use App\ControleFinanceiro\Middleware\RequireAuth;
 
 return [
-    // Auth CRUD
-    '/login' => ['controller' => AuthController::class, 'action' => 'create'],
-    '/register' => ['controller' => AuthController::class, 'action' => 'create'],
-    '/auth' => ['controller' => AuthController::class, 'action' => 'update'],
-    '/auth/me' => ['controller' => AuthController::class, 'action' => 'read', 'middleware' => [RequireAuth::class]],
-    '/logout' => ['controller' => AuthController::class, 'action' => 'delete'],
-
-    // Dashboard (consolidado em Auth)
-    '/dashboard' => ['controller' => AuthController::class, 'action' => 'read', 'middleware' => [RequireAuth::class]],
+    // Auth (processo, não CRUD)
+    '/login' => ['controller' => AuthController::class, 'action' => 'showLogin'],
+    '/register' => ['controller' => AuthController::class, 'action' => 'showRegister'],
+    '/auth' => ['controller' => AuthController::class, 'action' => 'authenticate'],
+    '/auth/register' => ['controller' => AuthController::class, 'action' => 'register'],
+    '/logout' => ['controller' => AuthController::class, 'action' => 'logout'],
+    '/dashboard' => ['controller' => AuthController::class, 'action' => 'dashboard', 'middleware' => [RequireAuth::class]],
 
     // Account CRUD
     '/contas' => ['controller' => AccountController::class, 'action' => 'read', 'middleware' => [RequireAuth::class]],
