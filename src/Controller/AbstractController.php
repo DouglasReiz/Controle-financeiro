@@ -6,6 +6,7 @@ namespace App\ControleFinanceiro\Controller;
 
 use App\ControleFinanceiro\Service\AuthSession;
 use App\ControleFinanceiro\Service\AuthUser;
+use App\ControleFinanceiro\Http\RequestHandler;
 
 abstract class AbstractController
 {
@@ -37,5 +38,12 @@ abstract class AbstractController
             header('Location: /login');
             exit;
         }
+    }
+
+    protected function wantsJson(): bool
+    {
+        $request = new RequestHandler();
+        $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+        return strpos($accept, 'application/json') !== false;
     }
 }
