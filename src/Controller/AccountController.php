@@ -62,12 +62,12 @@ class AccountController extends AbstractController
 
         if ($id) {
             $account = $this->accountService->getAccountById($id, $userId);
-            $this->respondResource($account);
+            $this->respondResource($account, 'accounts/show', 'account');
             return;
         }
 
         $accounts = $this->accountService->getAllAccounts($userId);
-        $this->respondResourceList('accounts/index', $accounts);
+        $this->respondResourceList($accounts, 'accounts/index', 'accounts');
     }
 
     /**
@@ -121,47 +121,5 @@ class AccountController extends AbstractController
 
         // 204 No Content é o padrão REST para DELETE bem-sucedido
         http_response_code(204);
-    }
-
-    /**
-     * Verifica se é requisição de atualização (PUT ou POST)
-     */
-    private function isUpdateRequest(): bool
-    {
-        return $this->request->isPut() || $this->request->isPost();
-    }
-
-    /**
-     * Verifica se é requisição de deleção (DELETE ou POST)
-     */
-    private function isDeleteRequest(): bool
-    {
-        return $this->request->isDelete() || $this->request->isPost();
-    }
-
-    /**
-     * Responde com um recurso individual (HTML ou JSON)
-     */
-    private function respondResource(array $resource): void
-    {
-        if ($this->wantsJson()) {
-            $this->respondSuccess(['data' => $resource]);
-            return;
-        }
-
-        $this->render('accounts/show', ['account' => $resource]);
-    }
-
-    /**
-     * Responde com lista de recursos (HTML ou JSON)
-     */
-    private function respondResourceList(string $viewName, array $resources): void
-    {
-        if ($this->wantsJson()) {
-            $this->respondSuccess(['data' => $resources]);
-            return;
-        }
-
-        $this->render($viewName, ['accounts' => $resources]);
     }
 }

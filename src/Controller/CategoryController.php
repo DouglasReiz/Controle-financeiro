@@ -74,12 +74,12 @@ class CategoryController extends AbstractController
 
         if ($id) {
             $category = $this->categoryService->getCategoryById($id, $userId);
-            $this->respondResource($category);
+            $this->respondResource($category, 'categories/show', 'category');
             return;
         }
 
         $categories = $this->categoryService->getAllCategories($userId);
-        $this->respondResourceList('categories/index', $categories);
+        $this->respondResourceList($categories, 'categories/index', 'categories');
     }
 
     /**
@@ -133,47 +133,5 @@ class CategoryController extends AbstractController
 
         // 204 No Content é o padrão REST para DELETE bem-sucedido
         http_response_code(204);
-    }
-
-    /**
-     * Verifica se é requisição de atualização (PUT ou POST)
-     */
-    private function isUpdateRequest(): bool
-    {
-        return $this->request->isPut() || $this->request->isPost();
-    }
-
-    /**
-     * Verifica se é requisição de deleção (DELETE ou POST)
-     */
-    private function isDeleteRequest(): bool
-    {
-        return $this->request->isDelete() || $this->request->isPost();
-    }
-
-    /**
-     * Responde com um recurso individual (HTML ou JSON)
-     */
-    private function respondResource(array $resource): void
-    {
-        if ($this->wantsJson()) {
-            $this->respondSuccess(['data' => $resource]);
-            return;
-        }
-
-        $this->render('categories/show', ['category' => $resource]);
-    }
-
-    /**
-     * Responde com lista de recursos (HTML ou JSON)
-     */
-    private function respondResourceList(string $viewName, array $resources): void
-    {
-        if ($this->wantsJson()) {
-            $this->respondSuccess(['data' => $resources]);
-            return;
-        }
-
-        $this->render($viewName, ['categories' => $resources]);
     }
 }

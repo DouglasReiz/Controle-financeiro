@@ -74,12 +74,12 @@ class TransactionController extends AbstractController
 
         if ($id) {
             $transaction = $this->transactionService->getTransactionById($id, $userId);
-            $this->respondResource($transaction);
+            $this->respondResource($transaction, 'transactions/show', 'transaction');
             return;
         }
 
         $transactions = $this->transactionService->getAllTransactions($userId);
-        $this->respondResourceList('transactions/index', $transactions);
+        $this->respondResourceList($transactions, 'transactions/index', 'transactions');
     }
 
     /**
@@ -133,47 +133,5 @@ class TransactionController extends AbstractController
 
         // 204 No Content é o padrão REST para DELETE bem-sucedido
         http_response_code(204);
-    }
-
-    /**
-     * Verifica se é requisição de atualização (PUT ou POST)
-     */
-    private function isUpdateRequest(): bool
-    {
-        return $this->request->isPut() || $this->request->isPost();
-    }
-
-    /**
-     * Verifica se é requisição de deleção (DELETE ou POST)
-     */
-    private function isDeleteRequest(): bool
-    {
-        return $this->request->isDelete() || $this->request->isPost();
-    }
-
-    /**
-     * Responde com um recurso individual (HTML ou JSON)
-     */
-    private function respondResource(array $resource): void
-    {
-        if ($this->wantsJson()) {
-            $this->respondSuccess(['data' => $resource]);
-            return;
-        }
-
-        $this->render('transactions/show', ['transaction' => $resource]);
-    }
-
-    /**
-     * Responde com lista de recursos (HTML ou JSON)
-     */
-    private function respondResourceList(string $viewName, array $resources): void
-    {
-        if ($this->wantsJson()) {
-            $this->respondSuccess(['data' => $resources]);
-            return;
-        }
-
-        $this->render($viewName, ['transactions' => $resources]);
     }
 }

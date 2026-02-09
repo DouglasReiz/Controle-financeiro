@@ -170,4 +170,71 @@ abstract class AbstractController
             'message' => $message,
         ], 401);
     }
+
+    /**
+     * Verifica se é requisição de atualização (PUT ou POST)
+     * Abstrai padrão repetido em controllers CRUD
+     */
+    protected function isUpdateRequest(): bool
+    {
+        return $this->request->isPut() || $this->request->isPost();
+    }
+
+    /**
+     * Verifica se é requisição de deleção (DELETE ou POST)
+     * Abstrai padrão repetido em controllers CRUD
+     */
+    protected function isDeleteRequest(): bool
+    {
+        return $this->request->isDelete() || $this->request->isPost();
+    }
+
+    /**
+     * Responde com um recurso individual (HTML ou JSON)
+     * Abstrai padrão repetido em controllers CRUD
+     * 
+     * @param array $resource Dados do recurso
+     * @param string $viewName Nome da view para renderizar (ex: 'accounts/show')
+     * @param string $dataKey Chave para passar dados à view (ex: 'account')
+     */
+    protected function respondResource(array $resource, string $viewName, string $dataKey): void
+    {
+        if ($this->wantsJson()) {
+            $this->respondSuccess(['data' => $resource]);
+            return;
+        }
+
+        $this->render($viewName, [$dataKey => $resource]);
+    }
+
+    /**
+     * Responde com lista de recursos (HTML ou JSON)
+     * Abstrai padrão repetido em controllers CRUD
+     * 
+     * @param array $resources Lista de recursos
+     * @param string $viewName Nome da view para renderizar (ex: 'accounts/index')
+     * @param string $dataKey Chave para passar dados à view (ex: 'accounts')
+     */
+    protected function respondResourceList(array $resources, string $viewName, string $dataKey): void
+    {
+        if ($this->wantsJson()) {
+            $this->respondSuccess(['data' => $resources]);
+            return;
+        }
+
+        $this->render($viewName, [$dataKey => $resources]);
+    }
+
+    /**
+     * Extrai valor do request (JSON ou POST)
+     * Abstrai padrão repetido em AuthController
+     * 
+     * @param string $key Chave do campo
+     * @param string $default Valor padrão se não encontrado
+     */
+    protected function extractFromRequest(string $key, string $default = ''): string
+    {
+        $data = $this->request->json();
+        return $data[$key] ?? $this->request->post($key, $default);
+    }
 }
