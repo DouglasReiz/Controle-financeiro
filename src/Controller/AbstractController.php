@@ -237,4 +237,23 @@ abstract class AbstractController
         $data = $this->request->json();
         return $data[$key] ?? $this->request->post($key, $default);
     }
+
+    /**
+     * Verifica se é requisição GET
+     * Útil para métodos que precisam renderizar formulários
+     */
+    protected function isGetRequest(): bool
+    {
+        return $this->request->isGet();
+    }
+
+    /**
+     * Responde com sucesso sem conteúdo (204 No Content)
+     * Padrão REST: Operação bem-sucedida, sem dados para retornar
+     * Usado em DELETE bem-sucedido
+     */
+    protected function respondNoContent(): void
+    {
+        http_response_code(204);
+    }
 }

@@ -86,21 +86,30 @@ class TransactionController extends AbstractController
      * GET /lancamentos/{id}/editar → Exibe formulário
      * PUT /lancamentos/{id}/editar → Atualiza lançamento
      * 
-     * Respostas PUT:
-     * - 200 OK: Lançamento atualizado
-     * - 400 Bad Request: Dados inválidos
+     * Respostas:
+     * - 200 OK: Formulário (GET) ou Lançamento atualizado (PUT)
+     * - 400 Bad Request: Dados inválidos (PUT)
+     * - 405 Method Not Allowed: Método inválido
      */
     public function update(int $id): void
     {
         $this->requireAuth();
+        $userId = $this->getAuthUser()->getId();
 
+        // GET: Exibir formulário de edição
+        if ($this->isGetRequest()) {
+            $transaction = $this->transactionService->getTransactionById($id, $userId);
+            $this->render('transactions/form', ['mode' => 'edit', 'transaction' => $transaction]);
+            return;
+        }
+
+        // PUT/POST: Atualizar dados
         if (!$this->isUpdateRequest()) {
             $this->respondMethodNotAllowed();
             return;
         }
 
         $data = $this->request->json();
-        $userId = $this->getAuthUser()->getId();
 
         $errors = $this->transactionService->validateTransactionData($data);
         if (!empty($errors)) {
@@ -131,7 +140,6 @@ class TransactionController extends AbstractController
         $userId = $this->getAuthUser()->getId();
         $this->transactionService->deleteTransaction($id, $userId);
 
-        // 204 No Content é o padrão REST para DELETE bem-sucedido
-        http_response_code(204);
+        $this->respondNoContent();
     }
 }

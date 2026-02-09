@@ -86,21 +86,30 @@ class CategoryController extends AbstractController
      * GET /categorias/{id}/editar → Exibe formulário
      * PUT /categorias/{id}/editar → Atualiza categoria
      * 
-     * Respostas PUT:
-     * - 200 OK: Categoria atualizada
-     * - 400 Bad Request: Dados inválidos
+     * Respostas:
+     * - 200 OK: Formulário (GET) ou Categoria atualizada (PUT)
+     * - 400 Bad Request: Dados inválidos (PUT)
+     * - 405 Method Not Allowed: Método inválido
      */
     public function update(int $id): void
     {
         $this->requireAuth();
+        $userId = $this->getAuthUser()->getId();
 
+        // GET: Exibir formulário de edição
+        if ($this->isGetRequest()) {
+            $category = $this->categoryService->getCategoryById($id, $userId);
+            $this->render('categories/form', ['mode' => 'edit', 'category' => $category]);
+            return;
+        }
+
+        // PUT/POST: Atualizar dados
         if (!$this->isUpdateRequest()) {
             $this->respondMethodNotAllowed();
             return;
         }
 
         $data = $this->request->json();
-        $userId = $this->getAuthUser()->getId();
 
         $errors = $this->categoryService->validateCategoryData($data);
         if (!empty($errors)) {
@@ -131,7 +140,6 @@ class CategoryController extends AbstractController
         $userId = $this->getAuthUser()->getId();
         $this->categoryService->deleteCategory($id, $userId);
 
-        // 204 No Content é o padrão REST para DELETE bem-sucedido
-        http_response_code(204);
+        $this->respondNoContent();
     }
 }

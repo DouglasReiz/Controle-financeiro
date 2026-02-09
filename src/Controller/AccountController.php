@@ -74,21 +74,30 @@ class AccountController extends AbstractController
      * GET /contas/{id}/editar → Exibe formulário
      * PUT /contas/{id}/editar → Atualiza conta
      * 
-     * Respostas PUT:
-     * - 200 OK: Conta atualizada
-     * - 400 Bad Request: Dados inválidos
+     * Respostas:
+     * - 200 OK: Formulário (GET) ou Conta atualizada (PUT)
+     * - 400 Bad Request: Dados inválidos (PUT)
+     * - 405 Method Not Allowed: Método inválido
      */
     public function update(int $id): void
     {
         $this->requireAuth();
+        $userId = $this->getAuthUser()->getId();
 
+        // GET: Exibir formulário de edição
+        if ($this->isGetRequest()) {
+            $account = $this->accountService->getAccountById($id, $userId);
+            $this->render('accounts/form', ['mode' => 'edit', 'account' => $account]);
+            return;
+        }
+
+        // PUT/POST: Atualizar dados
         if (!$this->isUpdateRequest()) {
             $this->respondMethodNotAllowed();
             return;
         }
 
         $data = $this->request->json();
-        $userId = $this->getAuthUser()->getId();
 
         $errors = $this->accountService->validateAccountData($data);
         if (!empty($errors)) {
@@ -119,7 +128,6 @@ class AccountController extends AbstractController
         $userId = $this->getAuthUser()->getId();
         $this->accountService->deleteAccount($id, $userId);
 
-        // 204 No Content é o padrão REST para DELETE bem-sucedido
-        http_response_code(204);
+        $this->respondNoContent();
     }
 }
