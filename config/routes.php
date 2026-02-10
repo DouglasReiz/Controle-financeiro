@@ -6,9 +6,13 @@ use App\ControleFinanceiro\Controller\AuthController;
 use App\ControleFinanceiro\Controller\AccountController;
 use App\ControleFinanceiro\Controller\TransactionController;
 use App\ControleFinanceiro\Controller\CategoryController;
+use App\ControleFinanceiro\Controller\Api\DashboardController;
 use App\ControleFinanceiro\Middleware\RequireAuth;
 
 return [
+    // Root redirect
+    '/' => ['controller' => AuthController::class, 'action' => 'showLogin', 'method' => 'GET'],
+
     // Auth (processo, não CRUD)
     '/login' => ['controller' => AuthController::class, 'action' => 'showLogin', 'method' => 'GET'],
     '/register' => ['controller' => AuthController::class, 'action' => 'showRegister', 'method' => 'GET'],
@@ -16,6 +20,9 @@ return [
     '/auth/register' => ['controller' => AuthController::class, 'action' => 'register', 'method' => 'POST'],
     '/logout' => ['controller' => AuthController::class, 'action' => 'logout', 'method' => 'GET'],
     '/dashboard' => ['controller' => AuthController::class, 'action' => 'dashboard', 'method' => 'GET', 'middleware' => [RequireAuth::class]],
+
+    // API endpoints
+    '/api/dashboard/summary' => ['controller' => DashboardController::class, 'action' => 'summary', 'method' => 'GET', 'middleware' => [RequireAuth::class]],
 
     // Account CRUD
     '/contas' => ['controller' => AccountController::class, 'action' => 'read', 'method' => 'GET', 'middleware' => [RequireAuth::class]],
