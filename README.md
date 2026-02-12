@@ -49,7 +49,7 @@ As principais funções e responsabilidades incluem:
 * Manutenção e Otimização: Atualizar conteúdos, otimizar imagens e testar a compatibilidade entre diferentes navegadores. 
 * O web designer une criatividade artística com conceitos técnicos de TI para construir plataformas que ajudam os usuários a atingir seus objetivos, como compras ou leitura de conteúdo.
 
-  ***Front-end***
+ ***Front-end***
 É responsável por criar a interface visual e interativa de sites e aplicativos, transformando layouts de design (Figma, Adobe XD) em códigos funcionais (HTML, CSS, JavaScript). Seu objetivo principal é garantir uma boa experiência do usuário (UX), responsividade em diferentes dispositivos e desempenho ágil.
 Principais Funções e Responsabilidades:
 * Implementação de Interface (UI): Construir a estrutura (HTML) e o estilo (CSS) das páginas, garantindo que o design seja fiel ao planejado.
