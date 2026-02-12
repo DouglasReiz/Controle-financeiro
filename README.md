@@ -39,7 +39,7 @@ Para garantir a fluidez do desenvolvimento e evitar conflitos de código, cada m
 ## *Outros Detalhes*
 
 ### Atividades por função
-* ***Designer***
+ ***Designer***
 É responsável por projetar, criar e manter a aparência, layout e usabilidade de sites e aplicações digitais, garantindo uma experiência do usuário (UX/UI) funcional, intuitiva e atraente em diversos dispositivos. define a estrutura, paleta de cores, tipografia e interatividade para alinhar a estética à identidade da marca.
 As principais funções e responsabilidades incluem:
 * Criação de Layouts: Projetar o visual de páginas web (wireframes e mockups) usando ferramentas como Adobe Photoshop, Illustrator ou Figma.
@@ -49,7 +49,7 @@ As principais funções e responsabilidades incluem:
 * Manutenção e Otimização: Atualizar conteúdos, otimizar imagens e testar a compatibilidade entre diferentes navegadores. 
 * O web designer une criatividade artística com conceitos técnicos de TI para construir plataformas que ajudam os usuários a atingir seus objetivos, como compras ou leitura de conteúdo.
 
-* ***Front-end***
+  ***Front-end***
 É responsável por criar a interface visual e interativa de sites e aplicativos, transformando layouts de design (Figma, Adobe XD) em códigos funcionais (HTML, CSS, JavaScript). Seu objetivo principal é garantir uma boa experiência do usuário (UX), responsividade em diferentes dispositivos e desempenho ágil.
 Principais Funções e Responsabilidades:
 * Implementação de Interface (UI): Construir a estrutura (HTML) e o estilo (CSS) das páginas, garantindo que o design seja fiel ao planejado.
@@ -59,7 +59,7 @@ Principais Funções e Responsabilidades:
 * Otimização de Performance: Garantir o carregamento rápido da página para melhorar a experiência do usuário.
 * Controle de Versão: Usar ferramentas como o Git para gerenciar alterações no código.
 
-* ***Back-end***
+ ***Back-end***
 É responsável pela "parte de trás" de aplicações, sites e sistemas, construindo a lógica, servidores e bancos de dados que o usuário não vê. Garante que o sistema funcione com segurança, rapidez e eficiência, processando dados e conectando a interface (front-end) à infraestrutura de regras de negócio.
 Principais Funções e Responsabilidades:
 * Desenvolvimento de Regras de Negócio: Criação da lógica de funcionamento, como algoritmos de checkout, sistemas de pagamento e fluxos de cadastro.
