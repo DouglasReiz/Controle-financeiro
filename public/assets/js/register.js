@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
     submitBtn.textContent = 'Criando conta...';
 
     // Douglas: Cadastro mockado. Quando o banco entrar, isso morre 💀
-    fetch('/register', {
+    fetch('/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

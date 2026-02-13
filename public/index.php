@@ -16,6 +16,8 @@ try {
     }
 
     $url = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $url = rtrim($url, '/'); // Remove a barra do final
+    if (empty($url)) $url = '/';
 
     if ($url !== '/' && substr($url, -1) === '/') {
         $url = rtrim($url, '/');

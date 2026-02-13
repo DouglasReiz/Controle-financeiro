@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\ControleFinanceiro\Service;
 
+use App\ControleFinanceiro\Db\Database;
+
 final class AuthService
 {
     public function validateLoginCredentials(string $email, string $password): array
@@ -60,9 +62,26 @@ final class AuthService
         return null;
     }
 
-    public function createUser(string $name, string $email, string $password): AuthUser
+// No AuthService.php
+    public function createUser($name, $email, $password)
     {
-        // Mock temporário - substituir por insert no banco
-        return new AuthUser(1, $name);
+        $db = Database::getConnection();
+
+        // Certificando de que as senhas estão sendo hasheadas!
+        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+
+        $sql = "INSERT INTO users (name, email, password) VALUES (:name, :email, :password)";
+        $stmt = $db->prepare($sql);
+
+        // O execute() retorna true ou false. Verifique isso!
+        if (!$stmt->execute([
+            ':name' => $name,
+            ':email' => $email,
+            ':password' => $hashedPassword
+        ])) {
+            throw new \Exception("Falha ao inserir usuário no banco.");
+        }
+
+        return $db->lastInsertId(); // Retorna o ID para a sessão
     }
 }

@@ -64,25 +64,34 @@ class AuthController extends AbstractController
 
     public function register(): void
     {
-        if (!$this->request->isPost()) {
-            $this->respondMethodNotAllowed();
-            return;
+        try {
+            if (!$this->request->isPost()) {
+                $this->respondMethodNotAllowed();
+                return;
+            }
+
+            $name = $this->extractName();
+            $email = $this->extractEmail();
+            $password = $this->extractPassword();
+
+            $errors = $this->authService->validateRegistrationData($name, $email, $password);
+            if (!empty($errors)) {
+                $this->respondValidationError($errors);
+                return;
+            }
+
+            $userId = $this->authService->createUser($name, $email, $password);
+
+            // Agora o AuthSession vai guardar o ID na chave 'auth_user'
+            AuthSession::set($userId);
+
+            // Garante que NADA foi impresso antes daqui
+            $this->respondSuccess(['message' => 'Conta criada com sucesso']);
+
+        } catch (\Exception $e) {
+            // Se der erro, responde um JSON de erro, não um erro fatal do PHP
+            $this->respondError($e->getMessage(), 500);
         }
-
-        $name = $this->extractName();
-        $email = $this->extractEmail();
-        $password = $this->extractPassword();
-
-        $errors = $this->authService->validateRegistrationData($name, $email, $password);
-        if (!empty($errors)) {
-            $this->respondValidationError($errors);
-            return;
-        }
-
-        $user = $this->authService->createUser($name, $email, $password);
-        AuthSession::set($user);
-
-        $this->respondSuccess(['message' => 'Conta criada com sucesso']);
     }
 
     public function logout(): void

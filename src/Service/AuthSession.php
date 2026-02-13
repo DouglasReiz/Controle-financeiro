@@ -20,13 +20,11 @@ final class AuthSession
         }
     }
 
-    public static function set(AuthUser $user): void
+    public static function set($user): void
     {
         self::ensureStarted();
-        $_SESSION[self::KEY] = [
-            'id' => $user->getId(),
-            'nome' => $user->getNome(),
-        ];
+        // Salva na chave correta definida na constante KEY
+        $_SESSION[self::KEY] = $user;
     }
 
     public static function clear(): void
@@ -45,9 +43,21 @@ final class AuthSession
     {
         self::ensureStarted();
         $data = $_SESSION[self::KEY] ?? null;
-        if ($data === null || !isset($data['id'], $data['nome'])) {
+
+        if ($data === null) {
             return null;
         }
-        return new AuthUser((int) $data['id'], (string) $data['nome']);
+
+        // Se você salvou apenas o ID (como está acontecendo no register)
+        if (is_string($data) || is_int($data)) {
+            return new AuthUser((int)$data, "Usuário"); // Nome genérico até o próximo login
+        }
+
+        // Se for um array ou objeto (como virá do login futuro)
+        if (is_array($data) && isset($data['id'], $data['nome'])) {
+            return new AuthUser((int)$data['id'], (string)$data['nome']);
+        }
+
+        return null;
     }
 }

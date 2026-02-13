@@ -9,6 +9,6 @@ return [
     'port' => '3306',          // Porta padrão do MySQL
     'db' => 'appCashControl',
     'user' => 'facilitte', // Não use o 'root' para conexões externas!
-    'pass' => '+9;b|Y2\-<DNBC/0+£m9',
+    'pass' => 'Teste123!',
     'charset' => 'utf8mb4',
 ];

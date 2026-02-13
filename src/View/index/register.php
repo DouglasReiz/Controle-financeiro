@@ -13,7 +13,7 @@
     <div class="register-card">
       <h2 class="card-title">Crie sua conta</h2>
       
-      <form id="registerForm" method="post" action="/register">
+      <form id="registerForm" method="post" action="/auth/register">
         <label for="name">Nome completo</label>
         <input 
           id="name" 

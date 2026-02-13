@@ -52,6 +52,7 @@ abstract class AbstractController
         http_response_code($statusCode);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
     }
 
     protected function requireAuth(): void
@@ -117,6 +118,7 @@ abstract class AbstractController
             $response['data'] = $data;
         }
         $this->json($response, 200);
+        exit;
     }
 
     /**
