@@ -242,14 +242,17 @@ abstract class AbstractController
      * @param string $dataKey Chave para passar dados à view (ex: 'accounts')
      */
     protected function respondResourceList(array $resources, string $viewName, string $dataKey): void
-    {
-        if ($this->wantsJson()) {
-            $this->respondSuccess(['data' => $resources]);
-            return;
-        }
-
-        $this->render($viewName, [$dataKey => $resources]);
+{
+    if ($this->wantsJson()) {
+        $this->json([
+            'success' => true,
+            'data' => $resources,  // ← direto, sem passar por respondSuccess
+        ]);
+        return;
     }
+
+    $this->render($viewName, [$dataKey => $resources]);
+}
 
     /**
      * Extrai valor do request (JSON ou POST)
