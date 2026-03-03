@@ -1,10 +1,6 @@
-// Accounts Page - Frontend Only
-// Mock temporário. Douglas, pode quebrar isso quando quiser
-
 const AccountsPage = {
   store: null,
   editingId: null,
-
   fields: {
     name: { id: 'account-name', name: 'Nome' },
     type: { id: 'account-type', name: 'Tipo' },
@@ -12,65 +8,93 @@ const AccountsPage = {
     balance: { id: 'account-balance', name: 'Saldo' }
   },
 
-  init() {
-    this.initializeStore();
+  async init() {
+    this.store = StateUtils.createStore([]);
     this.setupEventListeners();
-    this.render();
+    await this.loadAccounts();
   },
 
-  initializeStore() {
-    // PONTO DE ENTRADA DA API: Substituir por fetch GET /api/accounts
-    // Hoje: dados em memória (mock)
-    // Amanhã: const data = await fetch('/api/accounts').then(r => r.json());
-    const initialData = [
-      {
-        id: 1,
-        name: 'Conta Corrente',
-        type: 'checking',
-        balance: 3500.00,
-        institution: 'Banco XYZ',
-        lastUpdate: '2025-02-08'
-      },
-      {
-        id: 2,
-        name: 'Poupança',
-        type: 'savings',
-        balance: 8750.50,
-        institution: 'Banco XYZ',
-        lastUpdate: '2025-02-08'
-      },
-      {
-        id: 3,
-        name: 'Cartão de Crédito',
-        type: 'credit',
-        balance: -1200.00,
-        institution: 'Banco ABC',
-        lastUpdate: '2025-02-07'
-      }
-    ];
+  // ─── API ───────────────────────────────────────────────────────────────────
 
-    this.store = StateUtils.createStore(initialData);
+  async loadAccounts() {
+    try {
+      const response = await fetch('/contas', {
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (!response.ok) throw new Error(`Erro ${response.status}`);
+
+      const json = await response.json();
+      // Resposta: { success: true, data: { data: [...] } }
+      const accounts = json.data?.data ?? json.data ?? [];
+      this.store = StateUtils.createStore(accounts);
+    } catch (err) {
+      console.error('Erro ao carregar contas:', err);
+      this.showError('Não foi possível carregar as contas.');
+    } finally {
+      this.render();
+    }
   },
+
+  async createAccount(accountData) {
+    const response = await fetch('/contas_create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(accountData)
+    });
+
+    if (!response.ok) throw new Error(`Erro ${response.status}`);
+    const json = await response.json();
+    // AbstractController->respondCreated retorna { success: true, data: {...} }
+    return json.data;
+  },
+
+  async updateAccount(id, accountData) {
+    const response = await fetch(`/contas/${id}_update`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(accountData)
+    });
+
+    if (!response.ok) throw new Error(`Erro ${response.status}`);
+    const json = await response.json();
+    // AbstractController->respondSuccess retorna { success: true, data: { data: {...} } }
+    return json.data?.data ?? json.data;
+  },
+
+  async deleteAccount(id) {
+    const response = await fetch(`/contas/${id}_delete`, {
+      method: 'DELETE',
+      headers: { 'Accept': 'application/json' }
+    });
+
+    // respondNoContent retorna 204 sem body
+    if (response.status === 204) return true;
+    if (!response.ok) throw new Error(`Erro ${response.status}`);
+    return true;
+  },
+
+  // ─── Eventos ───────────────────────────────────────────────────────────────
 
   setupEventListeners() {
     const btnNewAccount = document.getElementById('btn-new-account');
     const btnNewAccountEmpty = document.getElementById('btn-new-account-empty');
     const accountForm = document.getElementById('account-form');
 
-    if (btnNewAccount) {
-      btnNewAccount.addEventListener('click', () => this.openModal());
-    }
-
-    if (btnNewAccountEmpty) {
-      btnNewAccountEmpty.addEventListener('click', () => this.openModal());
-    }
-
-    if (accountForm) {
-      accountForm.addEventListener('submit', (e) => this.handleFormSubmit(e));
-    }
+    if (btnNewAccount) btnNewAccount.addEventListener('click', () => this.openModal());
+    if (btnNewAccountEmpty) btnNewAccountEmpty.addEventListener('click', () => this.openModal());
+    if (accountForm) accountForm.addEventListener('submit', (e) => this.handleFormSubmit(e));
 
     ModalUtils.setupDefaultListeners('account-modal', () => this.onModalClose());
   },
+
+  // ─── Modal ─────────────────────────────────────────────────────────────────
 
   openModal(accountId = null) {
     this.editingId = accountId;
@@ -82,7 +106,7 @@ const AccountsPage = {
         modalTitle.textContent = 'Editar Conta';
         document.getElementById('account-name').value = account.name;
         document.getElementById('account-type').value = account.type;
-        document.getElementById('account-institution').value = account.institution;
+        document.getElementById('account-institution').value = account.institution ?? '';
         document.getElementById('account-balance').value = account.balance;
       }
     } else {
@@ -103,64 +127,74 @@ const AccountsPage = {
     FormUtils.resetForm('account-form');
   },
 
+  // ─── Formulário ────────────────────────────────────────────────────────────
+
   validateForm() {
     FormUtils.clearErrors('account-form');
     let isValid = true;
-
     isValid &= FormUtils.validateRequired(this.fields.name.id, this.fields.name.name);
     isValid &= FormUtils.validateRequired(this.fields.type.id, this.fields.type.name);
     isValid &= FormUtils.validateRequired(this.fields.institution.id, this.fields.institution.name);
     isValid &= FormUtils.validateNumber(this.fields.balance.id, this.fields.balance.name, -Infinity);
-
     return isValid;
   },
 
-  handleFormSubmit(e) {
+  async handleFormSubmit(e) {
     e.preventDefault();
-
-    if (!this.validateForm()) {
-      return;
-    }
+    if (!this.validateForm()) return;
 
     const formData = new FormData(document.getElementById('account-form'));
     const accountData = {
       name: formData.get('name'),
       type: formData.get('type'),
       institution: formData.get('institution'),
-      balance: parseFloat(formData.get('balance')),
-      lastUpdate: new Date().toISOString().split('T')[0]
+      balance: parseFloat(formData.get('balance'))
     };
 
-    // PONTO DE ENTRADA DA API
-    // Hoje: atualizar estado em memória
-    // Amanhã: POST /api/accounts (novo) ou PUT /api/accounts/:id (edição)
-    if (this.editingId) {
-      this.store.update(this.editingId, accountData);
-      // await fetch(`/api/accounts/${this.editingId}`, { method: 'PUT', body: JSON.stringify(accountData) });
-    } else {
-      this.store.add(accountData);
-      // await fetch('/api/accounts', { method: 'POST', body: JSON.stringify(accountData) });
-    }
+    const submitBtn = document.querySelector('#account-form [type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Salvando...';
 
-    this.render();
-    this.closeModal();
+    try {
+      if (this.editingId) {
+        const updated = await this.updateAccount(this.editingId, accountData);
+        this.store.update(this.editingId, updated ?? { ...accountData, id: this.editingId });
+      } else {
+        const created = await this.createAccount(accountData);
+        this.store.add(created ?? accountData);
+      }
+
+      this.render();
+      this.closeModal();
+    } catch (err) {
+      console.error('Erro ao salvar conta:', err);
+      this.showError('Não foi possível salvar a conta. Tente novamente.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Salvar Conta';
+    }
   },
+
+  // ─── Ações da lista ────────────────────────────────────────────────────────
 
   handleEdit(id) {
     this.openModal(id);
   },
 
-  handleDelete(id) {
-    if (confirm('Tem certeza que quer deletar?')) {
-      // PONTO DE ENTRADA DA API
-      // Hoje: remover do estado em memória
-      // Amanhã: DELETE /api/accounts/:id
+  async handleDelete(id) {
+    if (!confirm('Tem certeza que quer deletar esta conta?')) return;
+
+    try {
+      await this.deleteAccount(id);
       this.store.remove(id);
-      // await fetch(`/api/accounts/${id}`, { method: 'DELETE' });
-      
       this.render();
+    } catch (err) {
+      console.error('Erro ao deletar conta:', err);
+      alert('Não foi possível deletar a conta. Tente novamente.');
     }
   },
+
+  // ─── Render ────────────────────────────────────────────────────────────────
 
   render() {
     const accounts = this.store.getAll();
@@ -183,19 +217,16 @@ const AccountsPage = {
           <h3 class="account-name">${account.name}</h3>
           <span class="account-type">${this.formatType(account.type)}</span>
         </div>
-
         <div class="account-balance">
           <div class="balance-label">Saldo</div>
           <div class="balance-value ${account.balance >= 0 ? 'positive' : 'negative'}">
             ${this.formatCurrency(account.balance)}
           </div>
         </div>
-
         <div class="account-meta">
-          <span>${account.institution}</span>
-          <span>${this.formatDate(account.lastUpdate)}</span>
+          <span>${account.institution ?? ''}</span>
+          <span>${account.lastUpdate ? this.formatDate(account.lastUpdate) : ''}</span>
         </div>
-
         <div class="account-actions">
           <button class="btn-action" onclick="AccountsPage.handleEdit(${account.id})">Editar</button>
           <button class="btn-action delete" onclick="AccountsPage.handleDelete(${account.id})">Deletar</button>
@@ -204,12 +235,27 @@ const AccountsPage = {
     `).join('');
   },
 
+  // ─── Helpers ───────────────────────────────────────────────────────────────
+
+  showError(message) {
+    const container = document.getElementById('accounts-container');
+    const grid = document.getElementById('accounts-grid');
+    container.style.display = 'flex';
+    grid.style.display = 'none';
+    container.innerHTML = `
+      <article class="empty-state">
+        <div class="empty-state-icon">⚠️</div>
+        <h2 class="empty-state-title">Algo deu errado</h2>
+        <p class="empty-state-message">${message}</p>
+        <button class="btn btn-primary btn-large" onclick="AccountsPage.loadAccounts()">
+          Tentar novamente
+        </button>
+      </article>
+    `;
+  },
+
   formatType(type) {
-    const types = {
-      checking: 'Corrente',
-      savings: 'Poupança',
-      credit: 'Crédito'
-    };
+    const types = { checking: 'Corrente', savings: 'Poupança', credit: 'Crédito' };
     return types[type] || type;
   },
 
@@ -219,13 +265,8 @@ const AccountsPage = {
   },
 
   formatCurrency(value) {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-  AccountsPage.init();
-});
+document.addEventListener('DOMContentLoaded', () => AccountsPage.init());
