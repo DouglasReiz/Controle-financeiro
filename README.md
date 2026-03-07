@@ -1,34 +1,46 @@
 # Facilite - Controle Financeiro
 
-Sistema de controle financeiro em PHP com arquitetura MVC. Simples, direto e sem gambiarras.
+Sistema de controle financeiro pessoal desenvolvido em PHP com arquitetura MVC. Simples, direto e sem gambiarras.
 
 ## Estrutura do Projeto
 
 ```
 Controle-financeiro/
-├── public/                    # Ponto de entrada (rotas públicas)
-│   ├── index.php             # Front controller - orquestra tudo
-│   └── assets/               # CSS, JS, imagens
+├── public/
+│   ├── index.php                     # Front controller
+│   └── assets/                       # CSS, JS, imagens
 ├── src/
-│   ├── Controller/           # Lógica de orquestração
-│   │   ├── Api/              # Endpoints da API
-│   │   ├── AuthController    # Login/logout
-│   │   └── ...
-│   ├── Service/              # Lógica de negócio
-│   │   ├── AuthSession       # Persistência de sessão
-│   │   ├── AuthUser          # Identidade do usuário
-│   │   └── DashboardSummaryService
-│   ├── Middleware/           # Proteção de rotas
-│   │   └── RequireAuth       # Valida autenticação
-│   ├── View/                 # Templates HTML
-│   │   └── index/            # Páginas organizadas por tema
-│   └── Connection/           # Banco de dados (quando entrar)
-├── config/                   # Configurações centralizadas
-│   ├── routes.php            # Todas as rotas em um lugar
-│   └── helpers.php           # Funções auxiliares
-├── docs/                     # Documentação
-│   └── api.md               # Contratos da API
-└── vendor/                   # Dependências (composer)
+│   ├── Controller/
+│   │   ├── AbstractController.php    # Base com helpers de resposta HTTP
+│   │   ├── AuthController.php        # Login/logout
+│   │   ├── AccountController.php     # CRUD de contas
+│   │   ├── TransactionController.php # CRUD de lançamentos
+│   │   └── CategoryController.php    # CRUD de categorias
+│   ├── Service/
+│   │   ├── AuthSession.php           # Persistência de sessão
+│   │   ├── AuthUser.php              # Identidade do usuário
+│   │   ├── AccountService.php        # Regras de contas
+│   │   ├── TransactionService.php    # Regras de lançamentos
+│   │   └── CategoryService.php       # Regras de categorias
+│   ├── Repository/
+│   │   ├── AccountRepository.php     # Queries de contas
+│   │   ├── TransactionRepository.php # Queries de lançamentos
+│   │   └── CategoryRepository.php    # Queries de categorias
+│   ├── Middleware/
+│   │   └── RequireAuth.php           # Valida autenticação
+│   ├── View/
+│   │   ├── accounts/
+│   │   ├── transactions/
+│   │   └── categories/
+│   ├── Db/
+│   │   └── Database.php              # Singleton PDO
+│   └── Connection/                   # Credenciais do banco
+├── config/
+│   ├── routes.php                    # Todas as rotas
+│   └── helpers.php
+├── docs/
+│   └── api.md
+└── vendor/
 ```
 
 ## Como Rodar Localmente
@@ -37,96 +49,146 @@ Controle-financeiro/
 php -S localhost:8000 -t public
 ```
 
-Depois acessa `http://localhost:8000` no navegador.
+Acesse `http://localhost:8000` no navegador.
 
-## Fluxo de Autenticação
+## Banco de Dados
 
-**Usuário não logado** → Acessa `/` → Redireciona para `/login`
-2. **Login** → Preenche form → Fetch para `/auth` → Cria sessão → Redireciona para `/dashboard`
-3. **Dashboard** → Middleware valida sessão → Renderiza página → JS faz fetch em `/api/dashboard/summary`
-4. **Logout** → Clica em "Sair" → Limpa sessão → Redireciona para `/login`
+### Setup inicial
+
+Execute os scripts abaixo **na ordem** para criar o schema:
+
+```sql
+-- 1. Categorias
+CREATE TABLE IF NOT EXISTS categories (
+    id         BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id    BIGINT UNSIGNED NOT NULL,
+    nome       VARCHAR(50)     NOT NULL,
+    tipo       VARCHAR(20)     NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 2. Contas
+CREATE TABLE IF NOT EXISTS accounts (
+    id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id     BIGINT UNSIGNED NOT NULL,
+    name        VARCHAR(100)    NOT NULL,
+    type        ENUM('checking', 'savings', 'credit') NOT NULL,
+    institution VARCHAR(100)    NOT NULL DEFAULT '',
+    balance     DECIMAL(15, 2)  NOT NULL DEFAULT 0.00,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 3. Lançamentos
+CREATE TABLE IF NOT EXISTS transactions (
+    id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id     BIGINT UNSIGNED NOT NULL,
+    account_id  BIGINT UNSIGNED NOT NULL,
+    category_id BIGINT UNSIGNED NOT NULL,
+    description VARCHAR(150)    NOT NULL,
+    value       DECIMAL(15, 2)  NOT NULL,
+    type        ENUM('income', 'expense') NOT NULL,
+    date        DATE            NOT NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id)     REFERENCES users(id)      ON DELETE CASCADE,
+    FOREIGN KEY (account_id)  REFERENCES accounts(id)   ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+);
+```
+
+> **Atenção:** Todos os `user_id` devem ser `BIGINT UNSIGNED` para compatibilidade com `users.id`. Se a tabela `categories` já existir com `user_id INT`, rode `ALTER TABLE categories MODIFY user_id BIGINT UNSIGNED;` antes de criar `transactions`.
 
 ## Arquitetura de Dados
 
 ```
 Frontend (JS)
-    ↓ fetch
-API Controller
+    ↓ fetch + Accept: application/json
+Controller
     ↓
-Service (lógica)
+Service  (validação e regras de negócio)
     ↓
-Repository (banco) ← Será criado quando Douglas quiser
+Repository  (queries SQL com PDO)
     ↓
-Database
+Database (MySQL)
 ```
 
-## Importante
+## Fluxo de Autenticação
 
-- **Não acesse `$_SESSION` direto** - Use `AuthSession`
-- **Middleware cuida da segurança** - Não precisa validar em cada controller
-- **Comentários têm personalidade** - Leia pra entender o contexto
-- **Mock é temporário** - Quando o banco entrar, tudo muda de uma vez
+1. **Usuário não logado** → Acessa `/` → Redireciona para `/login`
+2. **Login** → Preenche form → Fetch para `/auth` → Cria sessão → Redireciona para `/dashboard`
+3. **Páginas protegidas** → Middleware `RequireAuth` valida sessão → Renderiza página
+4. **Logout** → Limpa sessão → Redireciona para `/login`
+
+## Padrões do Projeto
+
+**Formato de resposta JSON**
+Todas as respostas seguem o padrão definido no `AbstractController`:
+```json
+{ "success": true, "data": {} }
+```
+
+**Segurança**
+Todas as queries filtram por `user_id`, garantindo isolamento de dados entre usuários. Prepared statements em todas as queries, sem concatenação de strings SQL.
+
+**Fetch no frontend**
+Todas as requisições enviam `Accept: application/json` para acionar o `wantsJson()` do `RequestHandler`. Não é necessário prefixo `/api/` nas rotas.
+
+**Regras gerais**
+- Nunca acesse `$_SESSION` diretamente — use `AuthSession`
+- O middleware cuida da autenticação — não valide manualmente em cada controller
+- Controllers não contêm regras de negócio — delegue ao Service
+- Services não acessam o banco diretamente — delegue ao Repository
+
+## Rotas Disponíveis
+
+### Contas
+| Método | Rota | Ação |
+|---|---|---|
+| GET | `/contas` | Lista todas as contas |
+| POST | `/contas_create` | Cria nova conta |
+| PUT | `/contas/{id}_update` | Atualiza conta |
+| DELETE | `/contas/{id}_delete` | Deleta conta |
+
+### Lançamentos
+| Método | Rota | Ação |
+|---|---|---|
+| GET | `/lancamentos` | Lista todos os lançamentos |
+| GET | `/lancamentos/form-data` | Retorna contas e categorias para os selects |
+| POST | `/lancamentos_create` | Cria novo lançamento |
+| PUT | `/lancamentos/{id}_update` | Atualiza lançamento |
+| DELETE | `/lancamentos/{id}_delete` | Deleta lançamento |
+
+### Categorias
+| Método | Rota | Ação |
+|---|---|---|
+| GET | `/categorias` | Lista todas as categorias |
+| POST | `/categorias_create` | Cria nova categoria |
+| PUT | `/categorias/{id}_update` | Atualiza categoria |
+| DELETE | `/categorias/{id}_delete` | Deleta categoria |
 
 ## Próximos Passos
 
-- [ ] Integrar banco de dados (Douglas)
-- [ ] Criar Repository para dados
-- [ ] Adicionar mais endpoints da API
-- [ ] Expandir dashboard com gráficos (Diorge)
+- [x] Integrar banco de dados
+- [x] Criar camada Repository
+- [x] CRUD de Contas
+- [x] CRUD de Lançamentos
+- [x] CRUD de Categorias
+- [ ] Dashboard com resumo financeiro
+- [ ] Expandir dashboard com gráficos
 - [ ] Testes automatizados
 
+## 👥 Equipe e Responsabilidades
 
-### Código para rodar o projeto localmente
+| Função | Responsável | Atribuições |
+|---|---|---|
+| 🎨 **Designer** | **Diorge** | Layouts (Figma), UX/UI, design responsivo, identidade visual |
+| 💻 **Front-end** | **Daniel** | HTML/CSS/JS, consumo de APIs, interatividade, acessibilidade |
+| ⚙️ **Back-end** | **Douglas** | Lógica de negócio, APIs, banco de dados, segurança, autenticação |
 
-`php -S localhost:8000 -t public`
-
-# 👥 Equipe e Responsabilidades
-
-Para garantir a fluidez do desenvolvimento e evitar conflitos de código, cada membro possui responsabilidades específicas dentro da aplicação:
-
-| Função | Responsável | Atribuições Principais |
-| :--- | :--- | :--- |
-| **🎨 Designer** | **Diorge** | Criação de layouts (Figma), UX/UI, design responsivo, prototipagem e manutenção da identidade visual da marca.  |
-| **💻 Front-end** | **Daniel** | Transformação de layouts em código funcional (HTML/CSS/JS), consumo de APIs, interatividade, performance e acessibilidade. |
-| **⚙️ Back-end** | **Douglas** | Desenvolvimento da lógica de negócios, criação de APIs, gestão de bancos de dados, segurança, autenticação e escalabilidade. |
-
----
-
-### ⚠️ Orientações Importantes
-* **Sincronia:** Sempre comunique mudanças em contratos de API ou alterações estruturais no layout.
-* **Git:** Atente-se às suas áreas de atuação para evitar conflitos de merge.
-* **UX:** O feedback do designer deve ser priorizado na implementação da interface.
-
-
-## *Outros Detalhes*
-
-### Atividades por função
- ***Designer***
-É responsável por projetar, criar e manter a aparência, layout e usabilidade de sites e aplicações digitais, garantindo uma experiência do usuário (UX/UI) funcional, intuitiva e atraente em diversos dispositivos. define a estrutura, paleta de cores, tipografia e interatividade para alinhar a estética à identidade da marca.
-As principais funções e responsabilidades incluem:
-* Criação de Layouts: Projetar o visual de páginas web (wireframes e mockups) usando ferramentas como Adobe Photoshop, Illustrator ou Figma.
-* Design Responsivo: Garantir que o site se adapte automaticamente a computadores, tablets e smartphones.
-* Experiência do Usuário (UX): Focar na navegabilidade, criando menus, botões (call-to-action) e caminhos lógicos que facilitam o uso.
-* Front-end básico: Conhecimentos em HTML, CSS e às vezes JavaScript para converter o design em páginas funcionais.
-* Manutenção e Otimização: Atualizar conteúdos, otimizar imagens e testar a compatibilidade entre diferentes navegadores. 
-* O web designer une criatividade artística com conceitos técnicos de TI para construir plataformas que ajudam os usuários a atingir seus objetivos, como compras ou leitura de conteúdo.
-
- ***Front-end***
-É responsável por criar a interface visual e interativa de sites e aplicativos, transformando layouts de design (Figma, Adobe XD) em códigos funcionais (HTML, CSS, JavaScript). Seu objetivo principal é garantir uma boa experiência do usuário (UX), responsividade em diferentes dispositivos e desempenho ágil.
-Principais Funções e Responsabilidades:
-* Implementação de Interface (UI): Construir a estrutura (HTML) e o estilo (CSS) das páginas, garantindo que o design seja fiel ao planejado.
-* Interatividade: Utilizar JavaScript para criar elementos dinâmicos, como menus, botões, animações e formulários interativos.
-* Consumo de API (Back-end): Conectar o front-end ao back-end para exibir dados reais e enviar informações, garantindo que as funcionalidades operem corretamente.
-* Responsividade e Acessibilidade: Garantir que o site funcione bem em desktops, celulares e tablets (responsivo) e seja acessível para usuários com deficiências.
-* Otimização de Performance: Garantir o carregamento rápido da página para melhorar a experiência do usuário.
-* Controle de Versão: Usar ferramentas como o Git para gerenciar alterações no código.
-
- ***Back-end***
-É responsável pela "parte de trás" de aplicações, sites e sistemas, construindo a lógica, servidores e bancos de dados que o usuário não vê. Garante que o sistema funcione com segurança, rapidez e eficiência, processando dados e conectando a interface (front-end) à infraestrutura de regras de negócio.
-Principais Funções e Responsabilidades:
-* Desenvolvimento de Regras de Negócio: Criação da lógica de funcionamento, como algoritmos de checkout, sistemas de pagamento e fluxos de cadastro.
-* Gestão de Bancos de Dados: Estruturação, armazenamento e recuperação de informações (SQL e NoSQL) de forma eficiente.
-* Criação de APIs: Desenvolvimento de interfaces para comunicação entre o servidor e o front-end ou outros sistemas.
-* Segurança e Autenticação: Implementação de medidas de proteção, criptografia, login e permissões de acesso para proteger dados.
-* Otimização e Performance: Garantir que o sistema seja rápido e lide com alto volume de tráfego, utilizando cache e escalabilidade.
-* Manutenção e Correção de Bugs: Depuração de código para encontrar e corrigir erros na infraestrutura.
+### ⚠️ Orientações
+- **Sincronia:** Comunique mudanças em contratos de API ou estrutura de layout antes de implementar
+- **Git:** Respeite as áreas de atuação de cada membro para evitar conflitos de merge
+- **UX:** O feedback do designer tem prioridade na implementação da interface
