@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link rel="stylesheet" href="/assets/css/empty-states.css">
     <link rel="stylesheet" href="/assets/css/modal.css">
 </head>
+
 <body>
     <div class="dashboard-wrapper">
         <aside class="sidebar" id="sidebar">
@@ -82,11 +84,6 @@
                             </select>
                         </div>
 
-                        <div class="form-group">
-                            <label for="category-icon">Ícone *</label>
-                            <input type="text" id="category-icon" name="icon" placeholder="Ex: 🍔, 🚗, 💰..." maxlength="2" required>
-                        </div>
-
                         <div class="form-actions">
                             <button type="button" data-modal-cancel class="btn btn-secondary">Cancelar</button>
                             <button type="submit" class="btn btn-primary">Salvar Categoria</button>
@@ -102,4 +99,5 @@
     <script src="/assets/js/state-utils.js" defer></script>
     <script src="/assets/js/categories.js" defer></script>
 </body>
+
 </html>

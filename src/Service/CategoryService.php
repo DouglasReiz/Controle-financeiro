@@ -4,8 +4,17 @@ declare(strict_types=1);
 
 namespace App\ControleFinanceiro\Service;
 
+use App\ControleFinanceiro\Repository\CategoryRepository;
+
 final class CategoryService
 {
+    private CategoryRepository $repository;
+
+    public function __construct()
+    {
+        $this->repository = new CategoryRepository();
+    }
+
     public function validateCategoryData(array $data): array
     {
         $errors = [];
@@ -16,8 +25,8 @@ final class CategoryService
 
         if (empty($data['type'])) {
             $errors['type'] = 'Tipo é obrigatório';
-        } elseif (!in_array($data['type'], ['income', 'expense'])) {
-            $errors['type'] = 'Tipo deve ser income ou expense';
+        } elseif (!in_array($data['type'], ['income', 'expense', 'transfer'])) {
+            $errors['type'] = 'Tipo inválido';
         }
 
         return $errors;
@@ -25,45 +34,26 @@ final class CategoryService
 
     public function getAllCategories(int $userId): array
     {
-        // Mock temporário - substituir por consulta ao banco
-        return [
-            ['id' => 1, 'name' => 'Alimentação', 'type' => 'expense', 'icon' => '🍔'],
-            ['id' => 2, 'name' => 'Transporte', 'type' => 'expense', 'icon' => '🚗'],
-            ['id' => 3, 'name' => 'Salário', 'type' => 'income', 'icon' => '💰'],
-        ];
+        return $this->repository->findAllByUserId($userId);
     }
 
     public function getCategoryById(int $id, int $userId): ?array
     {
-        // Mock temporário - substituir por consulta ao banco
-        return ['id' => $id, 'name' => 'Alimentação', 'type' => 'expense', 'icon' => '🍔'];
+        return $this->repository->findByIdAndUserId($id, $userId);
     }
 
     public function createCategory(array $data, int $userId): array
     {
-        // Mock temporário - substituir por insert no banco
-        return [
-            'id' => 4,
-            'name' => $data['name'],
-            'type' => $data['type'],
-            'icon' => $data['icon'] ?? '📌',
-        ];
+        return $this->repository->insert($data, $userId);
     }
 
-    public function updateCategory(int $id, array $data, int $userId): array
+    public function updateCategory(int $id, array $data, int $userId): ?array
     {
-        // Mock temporário - substituir por update no banco
-        return [
-            'id' => $id,
-            'name' => $data['name'],
-            'type' => $data['type'],
-            'icon' => $data['icon'] ?? '📌',
-        ];
+        return $this->repository->update($id, $data, $userId);
     }
 
     public function deleteCategory(int $id, int $userId): bool
     {
-        // Mock temporário - substituir por delete no banco
-        return true;
+        return $this->repository->delete($id, $userId);
     }
 }
