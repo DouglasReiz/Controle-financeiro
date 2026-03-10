@@ -41,6 +41,7 @@ return [
     '/lancamentos/{id}_update' => ['controller' => TransactionController::class, 'action' => 'update', 'method' => 'PUT', 'middleware' => [RequireAuth::class]],
     '/lancamentos/{id}_delete' => ['controller' => TransactionController::class, 'action' => 'delete', 'method' => 'DELETE', 'middleware' => [RequireAuth::class]],
     '/lancamentos/{id}/editar' => ['controller' => TransactionController::class, 'action' => 'showEditForm', 'method' => 'GET', 'middleware' => [RequireAuth::class]],
+    '/lancamentos/form-data' => ['controller' => TransactionController::class, 'action' => 'formData', 'method' => 'GET', 'middleware' => [RequireAuth::class]],
 
     // Category CRUD
     '/categorias' => ['controller' => CategoryController::class, 'action' => 'read', 'method' => 'GET', 'middleware' => [RequireAuth::class]],
